@@ -1,0 +1,47 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "Alice Johnson",
+      "email": "alice@example.com",
+      "age": 28,
+      "department": "Engineering",
+      "skills": ["Python", "Rust", "JavaScript"],
+      "active": true,
+      "projects": [
+        {"name": "JSON MCP Server", "status": "completed"},
+        {"name": "API Gateway", "status": "in_progress"}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Bob Smith",
+      "email": "bob@example.com",
+      "age": 35,
+      "department": "Marketing",
+      "skills": ["SEO", "Content Writing", "Analytics"],
+      "active": true,
+      "projects": [
+        {"name": "Website Redesign", "status": "completed"},
+        {"name": "Brand Campaign", "status": "planning"}
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Carol Davis",
+      "email": "carol@example.com",
+      "age": 42,
+      "department": "Engineering",
+      "skills": ["Go", "Docker", "Kubernetes"],
+      "active": false,
+      "projects": [
+        {"name": "Microservices Migration", "status": "completed"}
+      ]
+    }
+  ],
+  "metadata": {
+    "version": "1.0",
+    "last_updated": "2024-01-15T10:30:00Z",
+    "total_users": 3
+  }
+}
