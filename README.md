@@ -22,18 +22,65 @@ A high-performance Rust-based Model Context Protocol (MCP) server that provides 
 - **MCP Compliant**: Full Model Context Protocol support with proper error handling
 - **Debug Logging**: File-based debug logging for troubleshooting without violating MCP protocol
 
-## Installation
+## 📦 Installation
 
-### Prerequisites
+### Quick Install
 
-- Rust 1.70+ 
-- Cargo package manager
+#### Via Cargo (Recommended)
+
+```bash
+cargo install json-mcp-server
+```
+
+#### Via Installation Script
+
+```bash
+# Linux/macOS
+curl -fsSL https://raw.githubusercontent.com/ciresnave/json-mcp-server/main/scripts/install.sh | bash
+
+# Windows PowerShell  
+iwr https://raw.githubusercontent.com/ciresnave/json-mcp-server/main/scripts/install.ps1 | iex
+```
+
+#### Pre-built Binaries
+
+Download platform-specific binaries from [GitHub Releases](https://github.com/ciresnave/json-mcp-server/releases):
+
+- **Windows**: `json-mcp-server-v{version}-x86_64-pc-windows-msvc.zip`
+- **macOS**: `json-mcp-server-v{version}-x86_64-apple-darwin.tar.gz`  
+- **Linux**: `json-mcp-server-v{version}-x86_64-unknown-linux-gnu.tar.gz`
+
+### Package Managers
+
+#### Debian/Ubuntu (.deb packages)
+
+```bash
+# Download and install .deb package
+wget https://github.com/ciresnave/json-mcp-server/releases/latest/download/json-mcp-server_*_amd64.deb
+sudo dpkg -i json-mcp-server_*_amd64.deb
+```
+
+#### RHEL/Fedora/CentOS (.rpm packages)
+
+```bash
+# Download and install .rpm package
+wget https://github.com/ciresnave/json-mcp-server/releases/latest/download/json-mcp-server-*.x86_64.rpm
+sudo rpm -i json-mcp-server-*.x86_64.rpm
+```
+
+#### Arch Linux (AUR)
+
+```bash
+# Manual install using PKGBUILD
+wget https://github.com/ciresnave/json-mcp-server/releases/latest/download/PKGBUILD
+makepkg -si
+```
 
 ### Building from Source
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/ciresnave/json-mcp-server.git
 cd json-mcp-server
 
 # Build the project
@@ -41,6 +88,15 @@ cargo build --release
 
 # Run the server
 cargo run
+```
+
+### Verification
+
+After installation, verify it works:
+
+```bash
+json-mcp-server --version
+json-mcp-server --help
 ```
 
 ## Usage
