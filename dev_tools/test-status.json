@@ -1,0 +1,24 @@
+{
+  "server": "json-mcp-server",
+  "version": "1.0.0",
+  "status": "testing",
+  "features": {
+    "read": true,
+    "write": true,
+    "query": true,
+    "validate": true,
+    "streaming": true
+  },
+  "tools": [
+    "json-read",
+    "json-write", 
+    "json-query",
+    "json-validate",
+    "json-help"
+  ],
+  "compliance": {
+    "mcp_protocol": true,
+    "stdout_clean": true,
+    "logging_fixed": true
+  }
+}

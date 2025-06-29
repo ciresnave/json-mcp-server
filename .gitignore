@@ -1,0 +1,25 @@
+# Rust build artifacts
+/target
+Cargo.lock
+
+# IDE files
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Debug logs
+mcp_debug.log
+debug.log
+
+# Test artifacts
+test_*.json
+*.tmp
+
+# Backup files
+*.bak
+*.backup

@@ -1,0 +1,6 @@
+{"name": "json-read", "arguments": {"file_path": "./examples/sample-data.json"}}
+{"name": "json-read", "arguments": {"file_path": "./examples/sample-data.json", "json_path": "$.users[*].name"}}
+{"name": "json-query", "arguments": {"file_path": "./examples/sample-data.json", "query": "$.users[?(@.age > 25)]", "format": "table"}}
+{"name": "json-write", "arguments": {"file_path": "./examples/new-config.json", "data": {"setting": "production", "debug": false, "features": ["auth", "analytics"]}}}
+{"name": "json-write", "arguments": {"file_path": "./examples/sample-data.json", "data": {"id": 4, "name": "Diana Prince", "email": "diana@example.com", "age": 29, "active": true, "department": "Engineering", "skills": ["Rust", "WebAssembly"]}, "mode": "append"}}
+{"name": "json-help", "arguments": {"topic": "examples"}}

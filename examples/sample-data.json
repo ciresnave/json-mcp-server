@@ -1,0 +1,49 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "Alice Johnson",
+      "email": "alice@example.com",
+      "age": 28,
+      "active": true,
+      "department": "Engineering",
+      "skills": ["Rust", "Python", "JavaScript"]
+    },
+    {
+      "id": 2,
+      "name": "Bob Smith",
+      "email": "bob@example.com", 
+      "age": 34,
+      "active": true,
+      "department": "Marketing",
+      "skills": ["Data Analysis", "SQL", "Tableau"]
+    },
+    {
+      "id": 3,
+      "name": "Charlie Brown",
+      "email": "charlie@example.com",
+      "age": 22,
+      "active": false,
+      "department": "Engineering", 
+      "skills": ["Go", "Docker", "Kubernetes"]
+    }
+  ],
+  "departments": {
+    "Engineering": {
+      "manager": "Alice Johnson",
+      "budget": 1000000,
+      "projects": ["Web Platform", "API Gateway", "Data Pipeline"]
+    },
+    "Marketing": {
+      "manager": "Bob Smith", 
+      "budget": 500000,
+      "projects": ["Campaign Analytics", "Customer Segmentation"]
+    }
+  },
+  "company": {
+    "name": "TechCorp Inc",
+    "founded": 2010,
+    "employees": 150,
+    "headquarters": "San Francisco, CA"
+  }
+}
