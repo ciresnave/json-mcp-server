@@ -1,0 +1,55 @@
+name: json-mcp-server
+base: core22
+version: '{{VERSION}}'
+summary: High-performance Model Context Protocol server for JSON operations
+description: |
+  A high-performance Rust-based Model Context Protocol (MCP) server that provides 
+  comprehensive JSON file operations optimized for LLM interactions.
+  
+  Features:
+  - json-read: Read JSON files with optional JSONPath filtering and pagination
+  - json-write: Write or update JSON files with multiple merge strategies  
+  - json-query: Execute complex JSONPath queries with various output formats
+  - json-validate: Validate JSON structure and syntax with detailed diagnostics
+  - json-help: Interactive help system with comprehensive examples
+  
+  Key capabilities:
+  - Large File Support: Efficient pagination and streaming for files of any size
+  - JSONPath Querying: Full JSONPath support for complex data extraction and filtering
+  - Flexible Writing: Multiple modes (replace, merge_shallow, merge_deep, append) with backup options
+  - LLM-Optimized: Detailed error messages and usage examples for optimal LLM interaction
+  - Memory Efficient: Smart pagination prevents memory overflow on large datasets
+  - MCP Compliant: Full Model Context Protocol support with proper error handling
+
+grade: stable
+confinement: strict
+
+architectures:
+  - build-on: amd64
+  - build-on: arm64
+
+apps:
+  json-mcp-server:
+    command: bin/json-mcp-server
+    plugs:
+      - home
+      - removable-media
+      - network
+      - network-bind
+    environment:
+      PATH: "$SNAP/bin:$PATH"
+
+parts:
+  json-mcp-server:
+    plugin: rust
+    source: https://github.com/ciresnave/json-mcp-server.git
+    source-tag: v{{VERSION}}
+    build-packages:
+      - build-essential
+      - pkg-config
+    stage-packages:
+      - libc6
+    rust-features:
+      - --release
+    organize:
+      'bin/json-mcp-server': bin/json-mcp-server

@@ -1,0 +1,53 @@
+# Maintainer: Eric Evans <CireSnave@gmail.com>
+pkgname=json-mcp-server
+pkgver={{VERSION}}
+pkgrel=1
+pkgdesc="High-performance Model Context Protocol server for JSON operations"
+arch=('x86_64' 'aarch64')
+url="https://github.com/ciresnave/json-mcp-server"
+license=('MIT' 'Apache-2.0')
+depends=()
+makedepends=('rust' 'cargo')
+provides=('json-mcp-server')
+conflicts=('json-mcp-server-bin' 'json-mcp-server-git')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/ciresnave/json-mcp-server/archive/v$pkgver.tar.gz")
+sha256sums=('{{SOURCE_SHA256}}')
+
+prepare() {
+    cd "$pkgname-$pkgver"
+    # Update Cargo.lock
+    cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+    cd "$pkgname-$pkgver"
+    export RUSTUP_TOOLCHAIN=stable
+    export CARGO_TARGET_DIR=target
+    cargo build --frozen --release --all-features
+}
+
+check() {
+    cd "$pkgname-$pkgver"
+    export RUSTUP_TOOLCHAIN=stable
+    cargo test --frozen --all-features
+}
+
+package() {
+    cd "$pkgname-$pkgver"
+    
+    # Install binary
+    install -Dm755 "target/release/$pkgname" "$pkgdir/usr/bin/$pkgname"
+    
+    # Install documentation
+    install -Dm644 "README.md" "$pkgdir/usr/share/doc/$pkgname/README.md"
+    
+    # Install examples
+    if [ -d "examples" ]; then
+        install -dm755 "$pkgdir/usr/share/doc/$pkgname/examples"
+        install -Dm644 examples/* "$pkgdir/usr/share/doc/$pkgname/examples/"
+    fi
+    
+    # Install licenses
+    install -Dm644 "LICENSE-MIT" "$pkgdir/usr/share/licenses/$pkgname/LICENSE-MIT"
+    install -Dm644 "LICENSE-APACHE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE-APACHE"
+}

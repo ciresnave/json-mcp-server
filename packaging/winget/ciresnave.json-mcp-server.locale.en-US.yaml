@@ -1,0 +1,52 @@
+PackageIdentifier: ciresnave.json-mcp-server
+PackageVersion: {{VERSION}}
+PackageLocale: en-US
+Publisher: Eric Evans
+PublisherUrl: https://github.com/ciresnave
+PublisherSupportUrl: https://github.com/ciresnave/json-mcp-server/issues
+Author: Eric Evans
+PackageName: JSON MCP Server
+PackageUrl: https://github.com/ciresnave/json-mcp-server
+License: MIT OR Apache-2.0
+LicenseUrl: https://github.com/ciresnave/json-mcp-server/blob/main/LICENSE-MIT
+Copyright: Copyright (c) 2024 Eric Evans
+CopyrightUrl: https://github.com/ciresnave/json-mcp-server/blob/main/LICENSE-MIT
+ShortDescription: High-performance Model Context Protocol server for JSON operations
+Description: |-
+  A high-performance Rust-based Model Context Protocol (MCP) server that provides comprehensive JSON file operations optimized for LLM interactions.
+  
+  Features include:
+  - json-read: Read JSON files with optional JSONPath filtering and pagination
+  - json-write: Write or update JSON files with multiple merge strategies  
+  - json-query: Execute complex JSONPath queries with various output formats
+  - json-validate: Validate JSON structure and syntax with detailed diagnostics
+  - json-help: Interactive help system with comprehensive examples
+  
+  Key capabilities:
+  - Large File Support: Efficient pagination and streaming for files of any size
+  - JSONPath Querying: Full JSONPath support for complex data extraction and filtering
+  - Flexible Writing: Multiple modes (replace, merge_shallow, merge_deep, append) with backup options
+  - LLM-Optimized: Detailed error messages and usage examples for optimal LLM interaction
+  - Memory Efficient: Smart pagination prevents memory overflow on large datasets
+  - MCP Compliant: Full Model Context Protocol support with proper error handling
+Moniker: json-mcp-server
+Tags:
+- json
+- mcp
+- llm
+- jsonpath
+- protocol
+- rust
+- model-context-protocol
+ReleaseNotes: |-
+  See the release notes at https://github.com/ciresnave/json-mcp-server/releases/tag/v{{VERSION}}
+ReleaseNotesUrl: https://github.com/ciresnave/json-mcp-server/releases/tag/v{{VERSION}}
+PurchaseUrl: https://github.com/ciresnave/json-mcp-server
+InstallationNotes: After installation, the json-mcp-server command will be available in your PATH.
+Documentations:
+- DocumentLabel: README
+  DocumentUrl: https://github.com/ciresnave/json-mcp-server/blob/main/README.md
+- DocumentLabel: API Documentation
+  DocumentUrl: https://docs.rs/json-mcp-server
+ManifestType: defaultLocale
+ManifestVersion: 1.4.0

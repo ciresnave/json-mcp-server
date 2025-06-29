@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>json-mcp-server</id>
+    <version>{{VERSION}}</version>
+    <packageSourceUrl>https://github.com/ciresnave/json-mcp-server</packageSourceUrl>
+    <owners>Eric Evans</owners>
+    <title>JSON MCP Server</title>
+    <authors>Eric Evans</authors>
+    <projectUrl>https://github.com/ciresnave/json-mcp-server</projectUrl>
+    <iconUrl>https://raw.githubusercontent.com/ciresnave/json-mcp-server/main/assets/icon.png</iconUrl>
+    <copyright>2024 Eric Evans</copyright>
+    <licenseUrl>https://github.com/ciresnave/json-mcp-server/blob/main/LICENSE-MIT</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <projectSourceUrl>https://github.com/ciresnave/json-mcp-server</projectSourceUrl>
+    <docsUrl>https://docs.rs/json-mcp-server</docsUrl>
+    <bugTrackerUrl>https://github.com/ciresnave/json-mcp-server/issues</bugTrackerUrl>
+    <tags>json mcp llm jsonpath protocol rust model-context-protocol</tags>
+    <summary>High-performance Model Context Protocol server for JSON operations</summary>
+    <description><![CDATA[
+A high-performance Rust-based Model Context Protocol (MCP) server that provides comprehensive JSON file operations optimized for LLM interactions.
+
+## Features
+
+- **json-read**: Read JSON files with optional JSONPath filtering and pagination
+- **json-write**: Write or update JSON files with multiple merge strategies  
+- **json-query**: Execute complex JSONPath queries with various output formats
+- **json-validate**: Validate JSON structure and syntax with detailed diagnostics
+- **json-help**: Interactive help system with comprehensive examples
+
+## Key Capabilities
+
+- Large File Support: Efficient pagination and streaming for files of any size
+- JSONPath Querying: Full JSONPath support for complex data extraction and filtering
+- Flexible Writing: Multiple modes (replace, merge_shallow, merge_deep, append) with backup options
+- LLM-Optimized: Detailed error messages and usage examples for optimal LLM interaction
+- Memory Efficient: Smart pagination prevents memory overflow on large datasets
+- MCP Compliant: Full Model Context Protocol support with proper error handling
+
+## Installation
+
+After installation via Chocolatey, the `json-mcp-server` command will be available in your PATH.
+
+## Usage
+
+The JSON MCP Server communicates via JSON-RPC over stdin/stdout following the Model Context Protocol specification. It's designed to be used by LLM clients and MCP-compatible applications.
+
+For detailed usage instructions and examples, visit: https://github.com/ciresnave/json-mcp-server
+]]></description>
+    <releaseNotes>https://github.com/ciresnave/json-mcp-server/releases</releaseNotes>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>

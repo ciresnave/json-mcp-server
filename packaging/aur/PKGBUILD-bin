@@ -1,0 +1,32 @@
+# Maintainer: Eric Evans <CireSnave@gmail.com>
+pkgname=json-mcp-server-bin
+pkgver={{VERSION}}
+pkgrel=1
+pkgdesc="High-performance Model Context Protocol server for JSON operations (binary release)"
+arch=('x86_64' 'aarch64')
+url="https://github.com/ciresnave/json-mcp-server"
+license=('MIT' 'Apache-2.0')
+provides=('json-mcp-server')
+conflicts=('json-mcp-server' 'json-mcp-server-git')
+
+source_x86_64=("$pkgname-$pkgver-x86_64.tar.gz::https://github.com/ciresnave/json-mcp-server/releases/download/v$pkgver/json-mcp-server-v$pkgver-x86_64-unknown-linux-gnu.tar.gz")
+source_aarch64=("$pkgname-$pkgver-aarch64.tar.gz::https://github.com/ciresnave/json-mcp-server/releases/download/v$pkgver/json-mcp-server-v$pkgver-aarch64-unknown-linux-gnu.tar.gz")
+
+sha256sums_x86_64=('{{SHA256_X64}}')
+sha256sums_aarch64=('{{SHA256_ARM64}}')
+
+package() {
+    # Install binary
+    install -Dm755 "json-mcp-server" "$pkgdir/usr/bin/json-mcp-server"
+    
+    # Install documentation if available
+    if [ -f "README.md" ]; then
+        install -Dm644 "README.md" "$pkgdir/usr/share/doc/$pkgname/README.md"
+    fi
+    
+    # Install examples if available
+    if [ -d "examples" ]; then
+        install -dm755 "$pkgdir/usr/share/doc/$pkgname/examples"
+        install -Dm644 examples/* "$pkgdir/usr/share/doc/$pkgname/examples/" 2>/dev/null || true
+    fi
+}
