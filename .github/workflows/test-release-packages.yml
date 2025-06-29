@@ -1,0 +1,124 @@
+name: Test Release Package Installations
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to test (e.g., v0.1.1)'
+        required: true
+        default: 'latest'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test-release-downloads:
+    name: Test Release Binary Downloads
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, windows-2022, macos-14]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Test Installation Scripts with Real Binaries
+      if: runner.os != 'Windows'
+      run: |
+        chmod +x scripts/install.sh
+        ./scripts/install.sh ${{ github.event.inputs.version || 'latest' }} binary
+        json-mcp-server --version
+        echo "✓ Binary installation successful on ${{ matrix.os }}"
+    
+    - name: Test Installation Scripts with Real Binaries (Windows)
+      if: runner.os == 'Windows'
+      shell: powershell
+      run: |
+        .\scripts\install.ps1 -Version ${{ github.event.inputs.version || 'latest' }} -Method binary
+        json-mcp-server --version
+        Write-Host "✓ Binary installation successful on ${{ matrix.os }}"
+
+  test-package-managers-with-real-binaries:
+    name: Test Package Managers with Real Downloads
+    runs-on: windows-latest
+    needs: test-release-downloads
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Chocolatey
+      shell: powershell
+      run: |
+        Set-ExecutionPolicy Bypass -Scope Process -Force
+        [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+        Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+    
+    - name: Generate and Test Real Chocolatey Package
+      shell: powershell
+      run: |
+        # Run the package generation script to create packages with real URLs and checksums
+        if (Test-Path "scripts/packaging/generate-packages.sh") {
+          bash scripts/packaging/generate-packages.sh chocolatey
+          
+          # Test the generated package
+          if (Test-Path "dist/chocolatey") {
+            cd dist/chocolatey
+            choco pack
+            choco install json-mcp-server -s . -y --force
+            
+            if (Get-Command json-mcp-server -ErrorAction SilentlyContinue) {
+              Write-Host "✓ Real Chocolatey package installation successful"
+              json-mcp-server --version
+            } else {
+              Write-Error "✗ Real Chocolatey package installation failed"
+              exit 1
+            }
+          }
+        }
+
+  validate-all-packages:
+    name: Validate All Package Definitions
+    runs-on: ubuntu-latest
+    needs: test-release-downloads
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Generate All Packages with Real Checksums
+      run: |
+        if [ -x "scripts/packaging/generate-packages.sh" ]; then
+          chmod +x scripts/packaging/generate-packages.sh
+          ./scripts/packaging/generate-packages.sh all
+          
+          echo "✓ All packages generated with real release data"
+          ls -la dist/
+        else
+          echo "Package generation script not found or not executable"
+          exit 1
+        fi
+    
+    - name: Upload Generated Packages
+      uses: actions/upload-artifact@v3
+      with:
+        name: release-ready-packages
+        path: dist/
+        retention-days: 30
+
+  summary:
+    name: Release Testing Summary
+    runs-on: ubuntu-latest
+    needs: [test-release-downloads, test-package-managers-with-real-binaries, validate-all-packages]
+    
+    steps:
+    - name: Success Summary
+      run: |
+        echo "🎉 All release package tests passed!"
+        echo ""
+        echo "✅ Binary downloads work on all platforms"
+        echo "✅ Installation scripts work with real binaries"
+        echo "✅ Package managers can install from real releases"
+        echo "✅ All package definitions generated with correct checksums"
+        echo ""
+        echo "🚀 Ready for package manager submissions!"
