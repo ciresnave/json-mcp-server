@@ -43,44 +43,22 @@ jobs:
         
         # Create nuspec file
         $version = (Select-String -Path "Cargo.toml" -Pattern 'version = "([^"]+)"').Matches[0].Groups[1].Value
-        $nuspecContent = @"
-        <?xml version="1.0" encoding="utf-8"?>
-        <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
-          <metadata>
-            <id>json-mcp-server</id>
-            <version>$version</version>
-            <packageSourceUrl>https://github.com/ciresnave/json-mcp-server</packageSourceUrl>
-            <owners>Eric Evans</owners>
-            <title>JSON MCP Server</title>
-            <authors>Eric Evans</authors>
-            <projectUrl>https://github.com/ciresnave/json-mcp-server</projectUrl>
-            <licenseUrl>https://github.com/ciresnave/json-mcp-server/blob/main/LICENSE-MIT</licenseUrl>
-            <requireLicenseAcceptance>false</requireLicenseAcceptance>
-            <projectSourceUrl>https://github.com/ciresnave/json-mcp-server</projectSourceUrl>
-            <tags>json mcp llm jsonpath protocol</tags>
-            <summary>High-performance Model Context Protocol server for JSON operations</summary>
-            <description>A high-performance Rust-based Model Context Protocol (MCP) server that provides comprehensive JSON file operations optimized for LLM interactions. Features include reading, writing, querying with JSONPath, validation, and streaming support for large files.</description>
-          </metadata>
-          <files>
-            <file src="tools\**" target="tools" />
-          </files>
-        </package>
-        "@
-        $nuspecContent | Out-File -FilePath "$packageDir\json-mcp-server.nuspec" -Encoding utf8
+        $xmlContent = "<?xml version=`"1.0`" encoding=`"utf-8`"?>`n<package xmlns=`"http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd`">`n  <metadata>`n    <id>json-mcp-server</id>`n    <version>$version</version>`n    <packageSourceUrl>https://github.com/ciresnave/json-mcp-server</packageSourceUrl>`n    <owners>Eric Evans</owners>`n    <title>JSON MCP Server</title>`n    <authors>Eric Evans</authors>`n    <projectUrl>https://github.com/ciresnave/json-mcp-server</projectUrl>`n    <licenseUrl>https://github.com/ciresnave/json-mcp-server/blob/main/LICENSE-MIT</licenseUrl>`n    <requireLicenseAcceptance>false</requireLicenseAcceptance>`n    <projectSourceUrl>https://github.com/ciresnave/json-mcp-server</projectSourceUrl>`n    <tags>json mcp llm jsonpath protocol</tags>`n    <summary>High-performance Model Context Protocol server for JSON operations</summary>`n    <description>A high-performance Rust-based Model Context Protocol (MCP) server that provides comprehensive JSON file operations optimized for LLM interactions. Features include reading, writing, querying with JSONPath, validation, and streaming support for large files.</description>`n  </metadata>`n  <files>`n    <file src=`"tools\**`" target=`"tools`" />`n  </files>`n</package>"
+        $xmlContent | Out-File -FilePath "$packageDir\json-mcp-server.nuspec" -Encoding utf8
         
-        # Create install script that uses local binary
-        $installScript = @"
-        `$ErrorActionPreference = 'Stop'
-        `$toolsDir = "`$(Split-Path -parent `$MyInvocation.MyCommand.Definition)"
-        `$exePath = Join-Path `$toolsDir "json-mcp-server.exe"
-        
-        # Copy the binary to tools directory (simulating download)
-        Copy-Item "target\release\json-mcp-server.exe" `$exePath -Force
-        
-        Write-Host "json-mcp-server installed successfully to `$exePath"
-        "@
+        # Create install script that uses local binary  
         New-Item -ItemType Directory -Path "$packageDir\tools" -Force
-        $installScript | Out-File -FilePath "$packageDir\tools\chocolateyinstall.ps1" -Encoding utf8
+        
+        $psScript = '$ErrorActionPreference = ''Stop''' + "`n" +
+                   '$toolsDir = "$(Split-Path -parent $MyInvocation.MyCommand.Definition)"' + "`n" +
+                   '$exePath = Join-Path $toolsDir "json-mcp-server.exe"' + "`n" +
+                   '' + "`n" +
+                   '# Copy the binary to tools directory (simulating download)' + "`n" +
+                   'Copy-Item "target\release\json-mcp-server.exe" $exePath -Force' + "`n" +
+                   '' + "`n" +
+                   'Write-Host "json-mcp-server installed successfully to $exePath"'
+        
+        $psScript | Out-File -FilePath "$packageDir\tools\chocolateyinstall.ps1" -Encoding utf8
         
         # Build package
         cd $packageDir
@@ -115,64 +93,16 @@ jobs:
         New-Item -ItemType Directory -Path $manifestDir -Force
         
         # Version manifest
-        $versionManifest = @"
-PackageIdentifier: ciresnave.json-mcp-server
-PackageVersion: `$version
-DefaultLocale: en-US
-ManifestType: version
-ManifestVersion: 1.4.0
-        "@
-        $versionManifest | Out-File -FilePath "$manifestDir\ciresnave.json-mcp-server.yaml" -Encoding utf8
+        $versionContent = "PackageIdentifier: ciresnave.json-mcp-server`nPackageVersion: $version`nDefaultLocale: en-US`nManifestType: version`nManifestVersion: 1.4.0"
+        $versionContent | Out-File -FilePath "$manifestDir\ciresnave.json-mcp-server.yaml" -Encoding utf8
         
         # Installer manifest (with placeholder URLs for testing)
-        $installerManifest = @"
-PackageIdentifier: ciresnave.json-mcp-server
-PackageVersion: `$version
-InstallerLocale: en-US
-Platform:
-  - Windows.Desktop
-MinimumOSVersion: 10.0.0.0
-InstallerType: zip
-Scope: user
-InstallModes:
-  - interactive
-  - silent
-UpgradeBehavior: install
-Installers:
-  - Architecture: x64
-    InstallerUrl: https://github.com/ciresnave/json-mcp-server/releases/download/v`$version/json-mcp-server-v`$version-x86_64-pc-windows-msvc.zip
-    InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000
-ManifestType: installer
-ManifestVersion: 1.4.0
-        "@
-        $installerManifest | Out-File -FilePath "$manifestDir\ciresnave.json-mcp-server.installer.yaml" -Encoding utf8
+        $installerContent = "PackageIdentifier: ciresnave.json-mcp-server`nPackageVersion: $version`nInstallerLocale: en-US`nPlatform:`n  - Windows.Desktop`nMinimumOSVersion: 10.0.0.0`nInstallerType: zip`nScope: user`nInstallModes:`n  - interactive`n  - silent`nUpgradeBehavior: install`nInstallers:`n  - Architecture: x64`n    InstallerUrl: https://github.com/ciresnave/json-mcp-server/releases/download/v$version/json-mcp-server-v$version-x86_64-pc-windows-msvc.zip`n    InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000`nManifestType: installer`nManifestVersion: 1.4.0"
+        $installerContent | Out-File -FilePath "$manifestDir\ciresnave.json-mcp-server.installer.yaml" -Encoding utf8
         
         # Locale manifest
-        $localeManifest = @"
-PackageIdentifier: ciresnave.json-mcp-server
-PackageVersion: `$version
-PackageLocale: en-US
-Publisher: Eric Evans
-PublisherUrl: https://github.com/ciresnave
-PublisherSupportUrl: https://github.com/ciresnave/json-mcp-server/issues
-Author: Eric Evans
-PackageName: JSON MCP Server
-PackageUrl: https://github.com/ciresnave/json-mcp-server
-License: MIT OR Apache-2.0
-LicenseUrl: https://github.com/ciresnave/json-mcp-server/blob/main/LICENSE-MIT
-ShortDescription: High-performance Model Context Protocol server for JSON operations
-Description: A high-performance Rust-based Model Context Protocol (MCP) server that provides comprehensive JSON file operations optimized for LLM interactions.
-Moniker: json-mcp-server
-Tags:
-  - json
-  - mcp
-  - llm
-  - jsonpath
-  - protocol
-ManifestType: defaultLocale
-ManifestVersion: 1.4.0
-        "@
-        $localeManifest | Out-File -FilePath "$manifestDir\ciresnave.json-mcp-server.locale.en-US.yaml" -Encoding utf8
+        $localeContent = "PackageIdentifier: ciresnave.json-mcp-server`nPackageVersion: $version`nPackageLocale: en-US`nPublisher: Eric Evans`nPublisherUrl: https://github.com/ciresnave`nPublisherSupportUrl: https://github.com/ciresnave/json-mcp-server/issues`nAuthor: Eric Evans`nPackageName: JSON MCP Server`nPackageUrl: https://github.com/ciresnave/json-mcp-server`nLicense: MIT OR Apache-2.0`nLicenseUrl: https://github.com/ciresnave/json-mcp-server/blob/main/LICENSE-MIT`nShortDescription: High-performance Model Context Protocol server for JSON operations`nDescription: A high-performance Rust-based Model Context Protocol (MCP) server that provides comprehensive JSON file operations optimized for LLM interactions.`nMoniker: json-mcp-server`nTags:`n  - json`n  - mcp`n  - llm`n  - jsonpath`n  - protocol`nManifestType: defaultLocale`nManifestVersion: 1.4.0"
+        $localeContent | Out-File -FilePath "$manifestDir\ciresnave.json-mcp-server.locale.en-US.yaml" -Encoding utf8
         
         Write-Host "Created Winget manifest files"
         Get-ChildItem -Recurse $manifestDir
