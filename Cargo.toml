@@ -1,6 +1,6 @@
 [package]
 name = "json-mcp-server"
-version = "0.1.0"
+version = "0.1.16"
 edition = "2021"
 description = "A high-performance Model Context Protocol (MCP) server for comprehensive JSON file operations optimized for LLM interactions"
 authors = ["Eric Evans <CireSnave@gmail.com>"]

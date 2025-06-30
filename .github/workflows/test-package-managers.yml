@@ -355,7 +355,8 @@ jobs:
     
     - name: Test Cargo Installation
       run: |
-        cargo install --path .
+        # Use --force to handle cases where binary might already exist
+        cargo install --path . --force
         json-mcp-server --version
         echo "Cargo installation successful on ${{ matrix.os }}"
 
