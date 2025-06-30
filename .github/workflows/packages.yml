@@ -45,11 +45,19 @@ jobs:
         # Only install essential packages to avoid conflicts
         sudo apt-get install -y gcc libc6-dev pkg-config jq
         
-        # Install cargo-deb for .deb packages
-        cargo install cargo-deb
+        # Install cargo-deb for .deb packages (check if exists first)
+        if ! command -v cargo-deb &> /dev/null; then
+          cargo install cargo-deb
+        else
+          echo "cargo-deb already installed, skipping"
+        fi
         
-        # Install cargo-generate-rpm for .rpm packages  
-        cargo install cargo-generate-rpm
+        # Install cargo-generate-rpm for .rpm packages (check if exists first)
+        if ! command -v cargo-generate-rpm &> /dev/null; then
+          cargo install cargo-generate-rpm
+        else
+          echo "cargo-generate-rpm already installed, skipping"
+        fi
 
     - name: Add package metadata to Cargo.toml
       run: |
