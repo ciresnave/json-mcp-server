@@ -51,13 +51,17 @@ jobs:
         # Create install script that uses local binary  
         New-Item -ItemType Directory -Path "$packageDir\tools" -Force
         
+        # Copy the binary to the package tools directory BEFORE building the package
+        Copy-Item "target\release\json-mcp-server.exe" "$packageDir\tools\json-mcp-server.exe" -Force
+        
         $psScript = '$ErrorActionPreference = ''Stop''' + "`n" +
                    '$toolsDir = "$(Split-Path -parent $MyInvocation.MyCommand.Definition)"' + "`n" +
                    '$exePath = Join-Path $toolsDir "json-mcp-server.exe"' + "`n" +
                    '' + "`n" +
-                   '# Copy the binary to tools directory (simulating download)' + "`n" +
-                   '$sourcePath = Join-Path (Split-Path (Split-Path $toolsDir -Parent) -Parent) "target\release\json-mcp-server.exe"' + "`n" +
-                   'Copy-Item $sourcePath $exePath -Force' + "`n" +
+                   '# Binary is already in the tools directory, just verify it exists' + "`n" +
+                   'if (-not (Test-Path $exePath)) {' + "`n" +
+                   '    throw "Binary not found at $exePath"' + "`n" +
+                   '}' + "`n" +
                    '' + "`n" +
                    'Write-Host "json-mcp-server installed successfully to $exePath"'
         
