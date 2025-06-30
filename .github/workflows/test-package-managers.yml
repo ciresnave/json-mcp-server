@@ -78,7 +78,7 @@ jobs:
         Copy-Item "target\release\json-mcp-server.exe" `$exePath -Force
         
         Write-Host "json-mcp-server installed successfully to `$exePath"
-"@
+        "@
         New-Item -ItemType Directory -Path "$packageDir\tools" -Force
         $installScript | Out-File -FilePath "$packageDir\tools\chocolateyinstall.ps1" -Encoding utf8
         
@@ -121,7 +121,7 @@ PackageVersion: $version
 DefaultLocale: en-US
 ManifestType: version
 ManifestVersion: 1.4.0
-"@
+        "@
         $versionManifest | Out-File -FilePath "$manifestDir\ciresnave.json-mcp-server.yaml" -Encoding utf8
         
         # Installer manifest (with placeholder URLs for testing)
@@ -144,7 +144,7 @@ Installers:
   InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000
         ManifestType: installer
         ManifestVersion: 1.4.0
-"@
+        "@
         $installerManifest | Out-File -FilePath "$manifestDir\ciresnave.json-mcp-server.installer.yaml" -Encoding utf8
         
         # Locale manifest
@@ -171,7 +171,7 @@ Tags:
 - protocol
 ManifestType: defaultLocale
 ManifestVersion: 1.4.0
-"@
+        "@
         $localeManifest | Out-File -FilePath "$manifestDir\ciresnave.json-mcp-server.locale.en-US.yaml" -Encoding utf8
         
         Write-Host "Created Winget manifest files"
