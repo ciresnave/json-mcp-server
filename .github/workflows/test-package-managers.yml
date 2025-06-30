@@ -78,7 +78,7 @@ jobs:
         Copy-Item "target\release\json-mcp-server.exe" `$exePath -Force
         
         Write-Host "json-mcp-server installed successfully to `$exePath"
-        "@
+"@
         New-Item -ItemType Directory -Path "$packageDir\tools" -Force
         $installScript | Out-File -FilePath "$packageDir\tools\chocolateyinstall.ps1" -Encoding utf8
         
@@ -91,10 +91,10 @@ jobs:
         
         # Verify installation
         if (Get-Command json-mcp-server -ErrorAction SilentlyContinue) {
-          Write-Host "✓ Chocolatey installation successful"
+          Write-Host "Chocolatey installation successful"
           json-mcp-server --version
         } else {
-          Write-Error "✗ Chocolatey installation failed"
+          Write-Error "Chocolatey installation failed"
           exit 1
         }
 
@@ -116,62 +116,62 @@ jobs:
         
         # Version manifest
         $versionManifest = @"
-        PackageIdentifier: ciresnave.json-mcp-server
-        PackageVersion: $version
-        DefaultLocale: en-US
-        ManifestType: version
-        ManifestVersion: 1.4.0
-        "@
+PackageIdentifier: ciresnave.json-mcp-server
+PackageVersion: $version
+DefaultLocale: en-US
+ManifestType: version
+ManifestVersion: 1.4.0
+"@
         $versionManifest | Out-File -FilePath "$manifestDir\ciresnave.json-mcp-server.yaml" -Encoding utf8
         
         # Installer manifest (with placeholder URLs for testing)
         $installerManifest = @"
-        PackageIdentifier: ciresnave.json-mcp-server
-        PackageVersion: $version
-        InstallerLocale: en-US
-        Platform:
-        - Windows.Desktop
-        MinimumOSVersion: 10.0.0.0
-        InstallerType: zip
-        Scope: user
-        InstallModes:
-        - interactive
-        - silent
-        UpgradeBehavior: install
-        Installers:
-        - Architecture: x64
-          InstallerUrl: https://github.com/ciresnave/json-mcp-server/releases/download/v$version/json-mcp-server-v$version-x86_64-pc-windows-msvc.zip
-          InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000
+PackageIdentifier: ciresnave.json-mcp-server
+PackageVersion: $version
+InstallerLocale: en-US
+Platform:
+- Windows.Desktop
+MinimumOSVersion: 10.0.0.0
+InstallerType: zip
+Scope: user
+InstallModes:
+- interactive
+- silent
+UpgradeBehavior: install
+Installers:
+- Architecture: x64
+  InstallerUrl: https://github.com/ciresnave/json-mcp-server/releases/download/v$version/json-mcp-server-v$version-x86_64-pc-windows-msvc.zip
+  InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000
         ManifestType: installer
         ManifestVersion: 1.4.0
-        "@
+"@
         $installerManifest | Out-File -FilePath "$manifestDir\ciresnave.json-mcp-server.installer.yaml" -Encoding utf8
         
         # Locale manifest
         $localeManifest = @"
-        PackageIdentifier: ciresnave.json-mcp-server
-        PackageVersion: $version
-        PackageLocale: en-US
-        Publisher: Eric Evans
-        PublisherUrl: https://github.com/ciresnave
-        PublisherSupportUrl: https://github.com/ciresnave/json-mcp-server/issues
-        Author: Eric Evans
-        PackageName: JSON MCP Server
-        PackageUrl: https://github.com/ciresnave/json-mcp-server
-        License: MIT OR Apache-2.0
-        LicenseUrl: https://github.com/ciresnave/json-mcp-server/blob/main/LICENSE-MIT
-        ShortDescription: High-performance Model Context Protocol server for JSON operations
-        Description: A high-performance Rust-based Model Context Protocol (MCP) server that provides comprehensive JSON file operations optimized for LLM interactions.
-        Moniker: json-mcp-server
-        Tags:
-        - json
-        - mcp
-        - llm
-        - jsonpath
-        - protocol
-        ManifestType: defaultLocale
-        ManifestVersion: 1.4.0
-        "@
+PackageIdentifier: ciresnave.json-mcp-server
+PackageVersion: $version
+PackageLocale: en-US
+Publisher: Eric Evans
+PublisherUrl: https://github.com/ciresnave
+PublisherSupportUrl: https://github.com/ciresnave/json-mcp-server/issues
+Author: Eric Evans
+PackageName: JSON MCP Server
+PackageUrl: https://github.com/ciresnave/json-mcp-server
+License: MIT OR Apache-2.0
+LicenseUrl: https://github.com/ciresnave/json-mcp-server/blob/main/LICENSE-MIT
+ShortDescription: High-performance Model Context Protocol server for JSON operations
+Description: A high-performance Rust-based Model Context Protocol (MCP) server that provides comprehensive JSON file operations optimized for LLM interactions.
+Moniker: json-mcp-server
+Tags:
+- json
+- mcp
+- llm
+- jsonpath
+- protocol
+ManifestType: defaultLocale
+ManifestVersion: 1.4.0
+"@
         $localeManifest | Out-File -FilePath "$manifestDir\ciresnave.json-mcp-server.locale.en-US.yaml" -Encoding utf8
         
         Write-Host "Created Winget manifest files"
@@ -195,10 +195,10 @@ jobs:
             if (-not (Test-Path $filePath)) {
                 throw "Required manifest file not found: $file"
             }
-            Write-Host "✓ Found manifest file: $file"
+            Write-Host "Found manifest file: $file"
         }
         
-        Write-Host "✓ Winget manifest structure validation successful"
+        Write-Host "Winget manifest structure validation successful"
 
   test-homebrew:
     name: Test Homebrew Installation
@@ -252,7 +252,7 @@ jobs:
         # Test formula syntax by attempting to parse it
         ruby -c homebrew-formula/json-mcp-server.rb
         
-        echo "✓ Homebrew formula syntax validation successful"
+        echo "Homebrew formula syntax validation successful"
 
   test-aur:
     name: Test AUR Package
@@ -319,7 +319,7 @@ jobs:
         # Check for common issues
         sudo -u builder namcap PKGBUILD || echo "namcap warnings noted"
         
-        echo "✓ AUR PKGBUILD validation successful"
+        echo "AUR PKGBUILD validation successful"
 
   test-snap:
     name: Test Snap Package
@@ -380,7 +380,7 @@ jobs:
         snapcraft list-plugins
         snapcraft expand-extensions
         
-        echo "✓ Snap package validation successful"
+        echo "Snap package validation successful"
     
     - name: Build Snap Package (if resources allow)
       run: |
@@ -410,7 +410,7 @@ jobs:
       run: |
         cargo install --path .
         json-mcp-server --version
-        echo "✓ Cargo installation successful on ${{ matrix.os }}"
+        echo "Cargo installation successful on ${{ matrix.os }}"
 
   integration-test:
     name: Integration Tests
@@ -443,7 +443,7 @@ jobs:
         kill $SERVER_PID 2>/dev/null || true
         rm -f test.json
         
-        echo "✓ Basic integration tests passed"
+        echo "Basic integration tests passed"
     
     - name: Summary
       run: |
