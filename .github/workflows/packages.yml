@@ -36,10 +36,7 @@ jobs:
         maintainer = "Eric Evans <CireSnave@gmail.com>"
         copyright = "2024, Eric Evans <CireSnave@gmail.com>"
         license-file = ["LICENSE-MIT", "4"]
-        extended-description = """\
-A high-performance Model Context Protocol (MCP) server that provides comprehensive \
-JSON file operations optimized for LLM interactions. Features include reading, \
-writing, querying with JSONPath, validation, and streaming support for large files."""
+        extended-description = "A high-performance Model Context Protocol (MCP) server that provides comprehensive JSON file operations optimized for LLM interactions. Features include reading, writing, querying with JSONPath, validation, and streaming support for large files."
         depends = "$auto"
         section = "utility"
         priority = "optional"
