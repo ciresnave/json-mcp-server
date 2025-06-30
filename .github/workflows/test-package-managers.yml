@@ -340,20 +340,6 @@ jobs:
     - name: Setup Rust
       uses: dtolnay/rust-toolchain@stable
     
-    - name: Verify Rust installation
-      shell: bash
-      run: |
-        which cargo || echo "Cargo not in PATH"
-        cargo --version || echo "Cargo command failed"
-        rustc --version || echo "Rustc command failed"
-        
-        # If Rust tools aren't available, install manually
-        if ! command -v cargo &> /dev/null; then
-          echo "Installing Rust manually..."
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
-          source ~/.cargo/env
-        fi
-    
     - name: Cache Cargo
       uses: actions/cache@v4
       with:
@@ -370,13 +356,46 @@ jobs:
     - name: Test Cargo Installation
       shell: bash
       run: |
-        # Ensure Rust is in PATH
+        # Comprehensive Rust installation and verification
+        echo "🔧 Verifying Rust installation..."
+        
+        # Check if cargo is available
+        if ! command -v cargo &> /dev/null; then
+          echo "❌ Cargo not found in PATH"
+          echo "📥 Installing Rust manually..."
+          
+          # Install Rust using rustup
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+          
+          # Source the environment
+          source ~/.cargo/env
+          
+          # Verify installation
+          if ! command -v cargo &> /dev/null; then
+            echo "❌ Failed to install Rust"
+            exit 1
+          fi
+        else
+          echo "✅ Cargo found in PATH"
+        fi
+        
+        # Always source the environment to be safe
         source ~/.cargo/env 2>/dev/null || true
         
-        # Use --force to handle cases where binary might already exist
+        # Show versions for debugging
+        echo "📊 Rust version info:"
+        rustc --version
+        cargo --version
+        
+        # Install the package with --force to handle existing binaries
+        echo "📦 Installing json-mcp-server..."
         cargo install --path . --force
+        
+        # Test the installed binary
+        echo "🧪 Testing installation..."
         json-mcp-server --version
-        echo "Cargo installation successful on ${{ matrix.os }}"
+        
+        echo "✅ Cargo installation successful on ${{ matrix.os }}"
 
   integration-test:
     name: Integration Tests
