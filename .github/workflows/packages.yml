@@ -20,10 +20,8 @@ jobs:
     - name: Install packaging tools
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential devscripts debhelper dh-cargo
-        
-        # Remove conflicting packages first
-        sudo apt-get remove -y gcc-multilib || true
+        # Only install essential packages to avoid conflicts
+        sudo apt-get install -y gcc libc6-dev pkg-config jq
         
         # Install cargo-deb for .deb packages
         cargo install cargo-deb
@@ -40,13 +38,13 @@ jobs:
         copyright = "2024, Eric Evans <CireSnave@gmail.com>"
         license-file = ["LICENSE-MIT", "4"]
         extended-description = "A high-performance Model Context Protocol (MCP) server that provides comprehensive JSON file operations optimized for LLM interactions. Features include reading, writing, querying with JSONPath, validation, and streaming support for large files."
-        depends = "$auto"
         section = "utility"
         priority = "optional"
         assets = [
             ["target/release/json-mcp-server", "usr/bin/", "755"],
             ["README.md", "usr/share/doc/json-mcp-server/", "644"],
-            ["examples/mcp_clients/", "usr/share/doc/json-mcp-server/examples/", "644"],
+            ["LICENSE-MIT", "usr/share/doc/json-mcp-server/", "644"],
+            ["LICENSE-APACHE", "usr/share/doc/json-mcp-server/", "644"],
         ]
         
         [package.metadata.generate-rpm]
