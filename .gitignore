@@ -20,6 +20,11 @@ debug.log
 test_*.json
 *.tmp
 
+# Temporary build/test directories
+choco-package/
+test-choco-package/
+dist-temp/
+
 # Backup files
 *.bak
 *.backup
