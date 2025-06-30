@@ -340,6 +340,20 @@ jobs:
     - name: Setup Rust
       uses: dtolnay/rust-toolchain@stable
     
+    - name: Verify Rust installation
+      shell: bash
+      run: |
+        which cargo || echo "Cargo not in PATH"
+        cargo --version || echo "Cargo command failed"
+        rustc --version || echo "Rustc command failed"
+        
+        # If Rust tools aren't available, install manually
+        if ! command -v cargo &> /dev/null; then
+          echo "Installing Rust manually..."
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+          source ~/.cargo/env
+        fi
+    
     - name: Cache Cargo
       uses: actions/cache@v4
       with:
@@ -354,7 +368,11 @@ jobs:
           ${{ runner.os }}-cargo-
     
     - name: Test Cargo Installation
+      shell: bash
       run: |
+        # Ensure Rust is in PATH
+        source ~/.cargo/env 2>/dev/null || true
+        
         # Use --force to handle cases where binary might already exist
         cargo install --path . --force
         json-mcp-server --version
