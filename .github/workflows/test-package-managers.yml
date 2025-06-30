@@ -117,7 +117,7 @@ jobs:
         # Version manifest
         $versionManifest = @"
 PackageIdentifier: ciresnave.json-mcp-server
-PackageVersion: $version
+PackageVersion: `$version
 DefaultLocale: en-US
 ManifestType: version
 ManifestVersion: 1.4.0
@@ -127,30 +127,30 @@ ManifestVersion: 1.4.0
         # Installer manifest (with placeholder URLs for testing)
         $installerManifest = @"
 PackageIdentifier: ciresnave.json-mcp-server
-PackageVersion: $version
+PackageVersion: `$version
 InstallerLocale: en-US
 Platform:
-- Windows.Desktop
+  - Windows.Desktop
 MinimumOSVersion: 10.0.0.0
 InstallerType: zip
 Scope: user
 InstallModes:
-- interactive
-- silent
+  - interactive
+  - silent
 UpgradeBehavior: install
 Installers:
-- Architecture: x64
-  InstallerUrl: https://github.com/ciresnave/json-mcp-server/releases/download/v$version/json-mcp-server-v$version-x86_64-pc-windows-msvc.zip
-  InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000
-        ManifestType: installer
-        ManifestVersion: 1.4.0
+  - Architecture: x64
+    InstallerUrl: https://github.com/ciresnave/json-mcp-server/releases/download/v`$version/json-mcp-server-v`$version-x86_64-pc-windows-msvc.zip
+    InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000
+ManifestType: installer
+ManifestVersion: 1.4.0
         "@
         $installerManifest | Out-File -FilePath "$manifestDir\ciresnave.json-mcp-server.installer.yaml" -Encoding utf8
         
         # Locale manifest
         $localeManifest = @"
 PackageIdentifier: ciresnave.json-mcp-server
-PackageVersion: $version
+PackageVersion: `$version
 PackageLocale: en-US
 Publisher: Eric Evans
 PublisherUrl: https://github.com/ciresnave
@@ -164,11 +164,11 @@ ShortDescription: High-performance Model Context Protocol server for JSON operat
 Description: A high-performance Rust-based Model Context Protocol (MCP) server that provides comprehensive JSON file operations optimized for LLM interactions.
 Moniker: json-mcp-server
 Tags:
-- json
-- mcp
-- llm
-- jsonpath
-- protocol
+  - json
+  - mcp
+  - llm
+  - jsonpath
+  - protocol
 ManifestType: defaultLocale
 ManifestVersion: 1.4.0
         "@
