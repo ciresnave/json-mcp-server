@@ -2,6 +2,7 @@ use crate::mcp::protocol::{Tool, ToolCall, ToolResult};
 use crate::mcp::server::ToolHandler;
 use async_trait::async_trait;
 use serde_json::{json, Value};
+use jsonpath_rust::JsonPath;
 use std::collections::HashMap;
 use std::fs;
 
@@ -60,17 +61,25 @@ impl JsonQuery {
         let content = fs::read_to_string(file_path)
             .map_err(|e| anyhow::anyhow!("Failed to read file '{}': {}", file_path, e))?;
 
+        // Parse JSON content
+        let json_value: Value = serde_json::from_str(&content)
+            .map_err(|e| anyhow::anyhow!("Failed to parse JSON: {}", e))?;
+
         // Execute JSONPath query
-        let results = match jsonpath_rust::JsonPathFinder::from_str(&content, query) {
-            Ok(finder) => finder.find(),
+        let results = match json_value.query(query) {
+            Ok(values) => {
+                // Convert the results to JSON values
+                values.into_iter().map(|v| v.clone()).collect::<Vec<Value>>()
+            },
             Err(e) => return Ok(ToolResult::error(format!("JSONPath query error: {}", e))),
         };
 
         // Format output based on requested format
+        let results_value = Value::Array(results);
         let output = match format {
-            "json" => serde_json::to_string_pretty(&results)?,
-            "text" => self.format_as_text(&results),
-            "table" => self.format_as_table(&results),
+            "json" => serde_json::to_string_pretty(&results_value)?,
+            "text" => self.format_as_text(&results_value),
+            "table" => self.format_as_table(&results_value),
             _ => return Ok(ToolResult::error(format!("Unknown format: {}", format))),
         };
 

@@ -2,6 +2,7 @@ use crate::mcp::protocol::{Tool, ToolCall, ToolResult};
 use crate::mcp::server::ToolHandler;
 use async_trait::async_trait;
 use serde_json::{json, Value};
+use jsonpath_rust::JsonPath;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -139,15 +140,8 @@ impl JsonStreaming {
                 if let Ok(json_value) = serde_json::from_str::<Value>(&line) {
                     let should_include = if let Some(query_str) = query {
                         // Apply JSONPath query to individual line
-                        match jsonpath_rust::JsonPathFinder::from_str(&line, query_str) {
-                            Ok(finder) => {
-                                let result = finder.find();
-                                match result {
-                                    Value::Null => false,
-                                    Value::Array(ref arr) if arr.is_empty() => false,
-                                    _ => true,
-                                }
-                            },
+                        match json_value.query(query_str) {
+                            Ok(results) => !results.is_empty(),
                             Err(_) => false,
                         }
                     } else {
@@ -179,16 +173,8 @@ impl JsonStreaming {
                     }
 
                     let should_include = if let Some(query_str) = query {
-                        let item_str = serde_json::to_string(item)?;
-                        match jsonpath_rust::JsonPathFinder::from_str(&item_str, query_str) {
-                            Ok(finder) => {
-                                let result = finder.find();
-                                match result {
-                                    Value::Null => false,
-                                    Value::Array(ref arr) if arr.is_empty() => false,
-                                    _ => true,
-                                }
-                            },
+                        match item.query(query_str) {
+                            Ok(results) => !results.is_empty(),
                             Err(_) => false,
                         }
                     } else {
@@ -204,15 +190,8 @@ impl JsonStreaming {
             } else {
                 // Single object - apply query if provided
                 let should_include = if let Some(query_str) = query {
-                    match jsonpath_rust::JsonPathFinder::from_str(&content, query_str) {
-                        Ok(finder) => {
-                            let result = finder.find();
-                            match result {
-                                Value::Null => false,
-                                Value::Array(ref arr) if arr.is_empty() => false,
-                                _ => true,
-                            }
-                        },
+                    match json_value.query(query_str) {
+                        Ok(results) => !results.is_empty(),
                         Err(_) => false,
                     }
                 } else {

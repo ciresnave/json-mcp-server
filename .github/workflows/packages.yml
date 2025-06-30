@@ -101,19 +101,19 @@ jobs:
         EOF
 
     - name: Upload deb package
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: json-mcp-server-deb
         path: target/debian/*.deb
 
     - name: Upload rpm package
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: json-mcp-server-rpm
         path: target/generate-rpm/*.rpm
 
     - name: Upload PKGBUILD
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: json-mcp-server-arch
         path: arch-package/PKGBUILD
@@ -126,12 +126,12 @@ jobs:
     
     steps:
     - name: Download all package artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         path: packages
 
     - name: Upload to Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         files: |
           packages/**/*.deb

@@ -10,21 +10,22 @@ This guide implements rigorous testing across all platforms and package managers
 
 ## 📋 Pre-Submission Testing Checklist
 
-### Phase 1: Automated Testing
-
-- [ ] **GitHub Actions workflows pass** for all platforms
-- [ ] **Cross-platform installations verified** (Ubuntu, Windows, macOS)
-- [ ] **Package generation succeeds** for all managers
-- [ ] **Checksum validation passes** for all binaries
-- [ ] **Manifest syntax validation** completes successfully
-
-### Phase 2: Manual Testing
+### Phase 1: Local Development Testing
 
 - [ ] **Local package builds** work on development machines
 - [ ] **Installation/uninstallation cycles** complete cleanly
 - [ ] **Version verification** shows correct version
 - [ ] **Basic functionality tests** pass post-installation
 - [ ] **Documentation accessibility** verified
+- [ ] **Package generation succeeds** for all managers locally
+
+### Phase 2: Automated CI/CD Testing
+
+- [ ] **GitHub Actions workflows pass** for all platforms
+- [ ] **Cross-platform installations verified** (Ubuntu, Windows, macOS)
+- [ ] **Checksum validation passes** for all binaries
+- [ ] **Manifest syntax validation** completes successfully
+- [ ] **Integration tests pass** across all target environments
 
 ### Phase 3: Staging Environment Testing
 
