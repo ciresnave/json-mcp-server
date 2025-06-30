@@ -22,6 +22,9 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y build-essential devscripts debhelper dh-cargo
         
+        # Remove conflicting packages first
+        sudo apt-get remove -y gcc-multilib || true
+        
         # Install cargo-deb for .deb packages
         cargo install cargo-deb
         
