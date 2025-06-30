@@ -66,9 +66,11 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt-get update
-        sudo apt-get install -y gcc-aarch64-linux-gnu gcc-multilib
         
-        # Install musl tools
+        # Remove any conflicting packages first
+        sudo apt-get remove -y gcc-multilib || true
+        
+        # Install musl tools for musl targets
         if [[ "${{ matrix.target }}" == *"musl"* ]]; then
           sudo apt-get install -y musl-tools
           if [[ "${{ matrix.target }}" == "aarch64"* ]]; then
@@ -79,8 +81,9 @@ jobs:
           fi
         fi
         
-        # Configure cross-compilation for aarch64
+        # Configure cross-compilation for aarch64 GNU
         if [[ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]]; then
+          sudo apt-get install -y gcc-aarch64-linux-gnu
           mkdir -p ~/.cargo
           echo '[target.aarch64-unknown-linux-gnu]' >> ~/.cargo/config.toml
           echo 'linker = "aarch64-linux-gnu-gcc"' >> ~/.cargo/config.toml

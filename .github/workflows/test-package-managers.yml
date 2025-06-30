@@ -367,7 +367,9 @@ jobs:
             plugin: rust
             source: .
             build-packages:
-              - build-essential
+              - gcc
+              - libc6-dev
+              - pkg-config
             stage-packages:
               - libc6
         EOF

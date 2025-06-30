@@ -45,7 +45,8 @@ parts:
     source: https://github.com/ciresnave/json-mcp-server.git
     source-tag: v{{VERSION}}
     build-packages:
-      - build-essential
+      - gcc
+      - libc6-dev
       - pkg-config
     stage-packages:
       - libc6
