@@ -239,7 +239,7 @@ json-mcp-server --version
 ```yaml
 # Automated testing runs on:
 - ubuntu-22.04, ubuntu-24.04
-- windows-2019, windows-2022  
+- windows-2022, windows-2025  
 - macos-12, macos-13, macos-14
 
 # Test matrix includes:

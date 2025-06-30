@@ -190,7 +190,7 @@ if (Test-Path "packages/snap/snapcraft.yaml") {
 # Step 5: Simulate Cross-Platform Installation Test
 Write-Host "`n🔧 Step 5: Simulating Cross-Platform Installation Test" -ForegroundColor Yellow
 
-Write-Host "Testing cargo install command (simulating macOS environment)..."
+Write-Host "Testing cargo install command (simulating cross-platform environments)..."
 try {
     # Check if cargo is available (should be since we're on Windows with Rust)
     if (Get-Command cargo -ErrorAction SilentlyContinue) {
