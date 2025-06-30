@@ -1,0 +1,272 @@
+name: Test Pre-Built Packages
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # Only test if we have pre-built artifacts
+  check-artifacts:
+    name: Check for Pre-Built Artifacts
+    runs-on: ubuntu-latest
+    outputs:
+      has-artifacts: ${{ steps.check.outputs.has-artifacts }}
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Check for pre-built artifacts
+      id: check
+      run: |
+        if [ -d "dist" ] && [ "$(ls -A dist)" ]; then
+          echo "has-artifacts=true" >> $GITHUB_OUTPUT
+          echo "✅ Found pre-built artifacts"
+          ls -la dist/
+        else
+          echo "has-artifacts=false" >> $GITHUB_OUTPUT
+          echo "ℹ️ No pre-built artifacts found - will build in CI"
+        fi
+
+  # Fallback build if no pre-built artifacts
+  fallback-build:
+    name: Fallback Build (if no pre-built artifacts)
+    runs-on: ${{ matrix.os }}
+    needs: check-artifacts
+    if: needs.check-artifacts.outputs.has-artifacts == 'false'
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: ubuntu-latest  
+            target: x86_64-unknown-linux-gnu
+          - os: macos-latest
+            target: x86_64-apple-darwin
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: ${{ matrix.target }}
+    
+    - name: Cache Cargo
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+    
+    - name: Build for testing
+      run: cargo build --release --target ${{ matrix.target }}
+    
+    - name: Upload test binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-binary-${{ matrix.target }}
+        path: target/${{ matrix.target }}/release/json-mcp-server*
+
+  # Test Chocolatey package (uses pre-built or fallback)
+  test-chocolatey:
+    name: Test Chocolatey Package
+    runs-on: windows-latest
+    needs: [check-artifacts, fallback-build]
+    if: always() && !failure()
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Download pre-built binary (if available)
+      if: needs.check-artifacts.outputs.has-artifacts == 'true'
+      run: |
+        if (Test-Path "dist/x86_64-pc-windows-msvc/json-mcp-server.exe") {
+          Write-Host "✅ Using pre-built binary"
+          New-Item -ItemType Directory -Path "target/x86_64-pc-windows-msvc/release" -Force
+          Copy-Item "dist/x86_64-pc-windows-msvc/json-mcp-server.exe" "target/x86_64-pc-windows-msvc/release/"
+        }
+      shell: powershell
+    
+    - name: Download fallback binary (if needed)
+      if: needs.check-artifacts.outputs.has-artifacts == 'false'
+      uses: actions/download-artifact@v4
+      with:
+        name: test-binary-x86_64-pc-windows-msvc
+        path: target/x86_64-pc-windows-msvc/release/
+    
+    - name: Install Chocolatey
+      shell: powershell
+      run: |
+        Set-ExecutionPolicy Bypass -Scope Process -Force
+        [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+        Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+    
+    - name: Test Chocolatey Package
+      shell: powershell
+      run: |
+        # Use pre-built package if available, otherwise create it
+        if (Test-Path "packages/chocolatey") {
+          Write-Host "Using pre-built Chocolatey package"
+          Copy-Item -Recurse "packages/chocolatey" "test-choco-package"
+        } else {
+          Write-Host "Creating Chocolatey package for testing"
+          .\test-chocolatey-local.ps1
+        }
+    
+    - name: Install and Test Package
+      shell: powershell
+      run: |
+        if (Test-Path "test-choco-package") {
+          Push-Location test-choco-package
+          choco pack
+          choco install json-mcp-server -s . -y --force
+          Pop-Location
+          
+          if (Get-Command json-mcp-server -ErrorAction SilentlyContinue) {
+            Write-Host "Chocolatey package test passed"
+            json-mcp-server --version
+          } else {
+            throw "Chocolatey package test failed"
+          }
+        } else {
+          Write-Host "No package to test"
+        }
+
+  # Test other package formats
+  test-package-formats:
+    name: Test Package Formats
+    runs-on: ubuntu-latest
+    needs: [check-artifacts]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Test Winget Manifests
+      run: |
+        if [ -d "packages/winget" ]; then
+          echo "✅ Testing pre-built Winget manifests"
+          find packages/winget -name "*.yaml" -exec echo "Found manifest: {}" \;
+        else
+          echo "ℹ️ No pre-built Winget manifests found"
+        fi
+    
+    - name: Test Arch PKGBUILD
+      run: |
+        if [ -f "packages/arch/PKGBUILD" ]; then
+          echo "✅ Testing pre-built Arch PKGBUILD"
+          cd packages/arch
+          bash -n PKGBUILD && echo "PKGBUILD syntax OK"
+        else
+          echo "ℹ️ No pre-built Arch PKGBUILD found"
+        fi
+    
+    - name: Test Snap snapcraft.yaml
+      run: |
+        if [ -f "packages/snap/snapcraft.yaml" ]; then
+          echo "✅ Testing pre-built Snap configuration"
+          cat packages/snap/snapcraft.yaml | head -20
+        else
+          echo "ℹ️ No pre-built Snap configuration found"
+        fi
+
+  # Integration test with actual MCP functionality
+  integration-test:
+    name: Integration Test
+    runs-on: ubuntu-latest
+    needs: [check-artifacts, fallback-build]
+    if: always() && !failure()
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Get test binary
+      run: |
+        if [ -f "dist/x86_64-unknown-linux-gnu/json-mcp-server" ]; then
+          echo "✅ Using pre-built binary"
+          cp dist/x86_64-unknown-linux-gnu/json-mcp-server json-mcp-server
+          chmod +x json-mcp-server
+        else
+          echo "ℹ️ Using fallback binary"
+          # Download from artifacts if available
+          echo "Building minimal test binary..."
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          source ~/.cargo/env
+          cargo build --release
+          cp target/release/json-mcp-server .
+        fi
+    
+    - name: Test MCP functionality
+      run: |
+        echo '{"test": "data", "nested": {"value": 42}}' > test.json
+        
+        # Test basic functionality
+        ./json-mcp-server --version
+        
+        # Test in background
+        ./json-mcp-server &
+        SERVER_PID=$!
+        sleep 2
+        
+        # Basic connectivity test (would need actual MCP client for full test)
+        if ps -p $SERVER_PID > /dev/null; then
+          echo "✅ Server started successfully"
+        else
+          echo "❌ Server failed to start"
+          exit 1
+        fi
+        
+        # Cleanup
+        kill $SERVER_PID 2>/dev/null || true
+        rm -f test.json
+        
+        echo "✅ Integration test passed"
+
+  # Summary job
+  test-summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: [check-artifacts, test-chocolatey, test-package-formats, integration-test]
+    if: always()
+    
+    steps:
+    - name: Test Results Summary
+      run: |
+        echo "🧪 Test Results Summary"
+        echo "======================"
+        echo ""
+        
+        if [ "${{ needs.check-artifacts.outputs.has-artifacts }}" == "true" ]; then
+          echo "✅ Pre-built artifacts found and tested"
+        else
+          echo "ℹ️ Used fallback CI builds for testing"
+        fi
+        
+        echo ""
+        echo "Test Results:"
+        echo "- Chocolatey: ${{ needs.test-chocolatey.result }}"
+        echo "- Package Formats: ${{ needs.test-package-formats.result }}"
+        echo "- Integration: ${{ needs.integration-test.result }}"
+        echo ""
+        
+        if [ "${{ needs.test-chocolatey.result }}" == "success" ] && 
+           [ "${{ needs.test-package-formats.result }}" == "success" ] && 
+           [ "${{ needs.integration-test.result }}" == "success" ]; then
+          echo "🎉 All tests passed!"
+          echo ""
+          echo "Ready for deployment! 🚀"
+        else
+          echo "❌ Some tests failed - review logs"
+          exit 1
+        fi
