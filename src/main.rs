@@ -14,7 +14,8 @@ use mcp::{
 #[derive(Parser)]
 #[command(
     name = "json-mcp-server",
-    about = "A Model Context Protocol server for JSON file operations"
+    about = "A Model Context Protocol server for JSON file operations",
+    version = env!("CARGO_PKG_VERSION")
 )]
 struct Args {
     #[arg(short, long, default_value = "off")]
