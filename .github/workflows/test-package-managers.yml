@@ -3,6 +3,8 @@ name: Test Package Installations
 on:
   push:
     branches: [ main ]
+    # Don't run on tag pushes to avoid duplicate runs during releases
+    tags-ignore: [ 'v*' ]
   pull_request:
     branches: [ main ]
   schedule:
@@ -54,7 +56,8 @@ jobs:
                    '$exePath = Join-Path $toolsDir "json-mcp-server.exe"' + "`n" +
                    '' + "`n" +
                    '# Copy the binary to tools directory (simulating download)' + "`n" +
-                   'Copy-Item "target\release\json-mcp-server.exe" $exePath -Force' + "`n" +
+                   '$sourcePath = Join-Path (Split-Path (Split-Path $toolsDir -Parent) -Parent) "target\release\json-mcp-server.exe"' + "`n" +
+                   'Copy-Item $sourcePath $exePath -Force' + "`n" +
                    '' + "`n" +
                    'Write-Host "json-mcp-server installed successfully to $exePath"'
         
@@ -165,7 +168,7 @@ jobs:
           
           # For testing, we'll use the local binary
           def install
-            bin.install "target/release/json-mcp-server"
+            bin.install "../target/release/json-mcp-server"
           end
           
           test do
@@ -173,9 +176,6 @@ jobs:
           end
         end
         EOF
-        
-        # Copy the built binary to where the formula expects it
-        cp target/release/json-mcp-server homebrew-formula/
     
     - name: Test Homebrew Formula Syntax
       run: |
@@ -192,7 +192,7 @@ jobs:
     steps:
     - name: Install dependencies
       run: |
-        pacman -Sy --noconfirm base-devel git
+        pacman -Sy --noconfirm base-devel git rust
         
         # Create non-root user for makepkg
         useradd -m -G wheel -s /bin/bash builder
@@ -335,6 +335,19 @@ jobs:
     
     - name: Setup Rust
       uses: dtolnay/rust-toolchain@stable
+    
+    - name: Cache Cargo
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
     
     - name: Test Cargo Installation
       run: |

@@ -5,6 +5,10 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Release Builds"]
+    types:
+      - completed
 
 permissions:
   contents: write
@@ -20,6 +24,20 @@ jobs:
     
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
+    
+    - name: Cache Cargo
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-cargo-packages-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-packages-
+          ${{ runner.os }}-cargo-
     
     - name: Install packaging tools
       run: |

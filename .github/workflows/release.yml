@@ -126,25 +126,27 @@ jobs:
       if: matrix.os == 'windows-latest'
       shell: bash
       run: |
+        VERSION=${GITHUB_REF#refs/tags/}
         cp target/${{ matrix.target }}/release/json-mcp-server${{ matrix.exe_suffix }} dist/
         cp README.md LICENSE-MIT LICENSE-APACHE dist/
         cd dist
-        7z a ../json-mcp-server-${{ matrix.target }}${{ matrix.archive_suffix }} *
+        7z a ../json-mcp-server-$VERSION-${{ matrix.target }}${{ matrix.archive_suffix }} *
 
     - name: Copy binary and create archive (Unix)
       if: matrix.os != 'windows-latest'
       shell: bash
       run: |
+        VERSION=${GITHUB_REF#refs/tags/}
         cp target/${{ matrix.target }}/release/json-mcp-server${{ matrix.exe_suffix }} dist/
         cp README.md LICENSE-MIT LICENSE-APACHE dist/
         cd dist
-        tar czf ../json-mcp-server-${{ matrix.target }}${{ matrix.archive_suffix }} *
+        tar czf ../json-mcp-server-$VERSION-${{ matrix.target }}${{ matrix.archive_suffix }} *
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: json-mcp-server-${{ matrix.target }}
-        path: json-mcp-server-${{ matrix.target }}${{ matrix.archive_suffix }}
+        path: json-mcp-server-*-${{ matrix.target }}${{ matrix.archive_suffix }}
 
   release:
     name: Create Release
