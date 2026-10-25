@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.1
+
+### Fixed
+- The built-in `json-help` text and the README documented parameter names the tools do not accept (`json_path`, `format`/`output_format` on reads, `content`, `merge_shallow`/`merge_deep`, `backup`, `create_path`, `start_index`); they now match the tool schemas (`query`, `limit`, `offset`, `data`, `mode` = replace/merge/append, `create_dirs`, `pretty`). A client following the old help text had its filter silently ignored.
+- Streaming claims corrected: only line-delimited JSON is read record by record; a single large JSON document is parsed whole.
+
+### Changed
+- The published crate contains only sources, tests, examples, README, CHANGELOG, licences and lockfile (`include` list); committed binaries and packaging trees are no longer packaged.
+
 ## 0.2.0
 
 First release since 0.1.0 on crates.io; includes everything in 0.1.17-0.1.19 below.
