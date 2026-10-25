@@ -1,6 +1,7 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
 use crate::json_tools::handler::JsonToolsHandler;
 use crate::mcp::protocol::{MCPRequest, MCPResponse, Tool, ToolCall, ToolResult};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::collections::HashMap;
 use tracing::{debug, error};
 
@@ -57,7 +58,11 @@ impl MCPServer {
                         Ok(result) => MCPResponse::success(request.id, json!(result)),
                         Err(e) => {
                             error!("Tool call failed: {}", e);
-                            MCPResponse::error(request.id, -32603, &format!("Tool call failed: {}", e))
+                            MCPResponse::error(
+                                request.id,
+                                -32603,
+                                &format!("Tool call failed: {}", e),
+                            )
                         }
                     }
                 } else {
@@ -75,14 +80,17 @@ impl MCPServer {
                     Some(v) if SUPPORTED_PROTOCOL_VERSIONS.contains(&v) => v,
                     _ => SUPPORTED_PROTOCOL_VERSIONS[0],
                 };
-                MCPResponse::success(request.id, json!({
-                    "protocolVersion": version,
-                    "capabilities": { "tools": {} },
-                    "serverInfo": {
-                        "name": "json-mcp-server",
-                        "version": env!("CARGO_PKG_VERSION")
-                    }
-                }))
+                MCPResponse::success(
+                    request.id,
+                    json!({
+                        "protocolVersion": version,
+                        "capabilities": { "tools": {} },
+                        "serverInfo": {
+                            "name": "json-mcp-server",
+                            "version": env!("CARGO_PKG_VERSION")
+                        }
+                    }),
+                )
             }
             "ping" => MCPResponse::success(request.id, json!({})),
             _ => MCPResponse::error(request.id, -32601, "Method not found"),
@@ -95,7 +103,10 @@ impl MCPServer {
         let tool_call: ToolCall = serde_json::from_value(params)?;
 
         if !self.tools.contains_key(&tool_call.name) {
-            return Ok(ToolResult::error(format!("Unknown tool: {}", tool_call.name)));
+            return Ok(ToolResult::error(format!(
+                "Unknown tool: {}",
+                tool_call.name
+            )));
         }
 
         self.handler.call_tool(tool_call).await

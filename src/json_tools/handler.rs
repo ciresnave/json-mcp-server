@@ -1,7 +1,8 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
 use crate::json_tools::{operations::JsonOperations, query::JsonQuery, streaming::JsonStreaming};
 use crate::mcp::protocol::{Tool, ToolCall, ToolResult};
 use crate::mcp::server::ToolHandler;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::collections::HashMap;
 
 pub struct JsonToolsHandler {
@@ -38,7 +39,8 @@ impl JsonToolsHandler {
     }
 
     async fn handle_json_help(&self, args: &HashMap<String, Value>) -> anyhow::Result<ToolResult> {
-        let topic = args.get("topic")
+        let topic = args
+            .get("topic")
             .and_then(|v| v.as_str())
             .unwrap_or("overview");
 
@@ -86,7 +88,7 @@ Use 'json-help' with specific topics for detailed guidance:
 - topic: 'streaming' - Learn about handling large files
 - topic: 'examples' - See practical usage examples
 - topic: 'tools' - Get detailed help for individual tools"#
-            },
+            }
             "reading" => {
                 r#"# Reading JSON Files
 
@@ -127,7 +129,7 @@ Reads and parses JSON files with automatic streaming for large files.
 - Read configuration files
 - Parse API responses stored as JSON
 - Handle large datasets efficiently"#
-            },
+            }
             "writing" => {
                 r#"# Writing JSON Files
 
@@ -167,7 +169,7 @@ Creates or updates JSON files with flexible merge strategies.
   }
 }
 ```"#
-            },
+            }
             "querying" => {
                 r#"# Querying JSON with JSONPath
 
@@ -214,7 +216,7 @@ Execute complex JSONPath queries on JSON files.
 - `$..field` - All fields named 'field' anywhere
 - `$.object.field` - Specific nested field
 - `$[*]` - All root level elements"#
-            },
+            }
             "streaming" => {
                 r#"# Streaming Large JSON Files
 
@@ -252,7 +254,7 @@ The json-read tool automatically handles large files via streaming without loadi
 - Set reasonable limits for large datasets
 - Use offset for pagination
 - Stream arrays rather than large objects when possible"#
-            },
+            }
             "examples" => {
                 r#"# Practical JSON Tool Examples
 
@@ -313,7 +315,7 @@ The json-read tool automatically handles large files via streaming without loadi
   "mode": "append"
 }}
 ```"#
-            },
+            }
             "tools" => {
                 r#"# Individual Tool Help
 
@@ -351,11 +353,19 @@ The json-read tool automatically handles large files via streaming without loadi
 - **"file_path is required"** → Add: `"file_path": "./your-file.json"`
 - **"data is required"** → Add: `"data": {"your": "json data"}`
 - **"query is required"** → Add: `"query": "$.your.jsonpath"`"#
-            },
-            _ => "Unknown help topic. Available topics: overview, reading, writing, querying, streaming, examples, tools"
+            }
+            _ => {
+                "Unknown help topic. Available topics: overview, reading, writing, querying, streaming, examples, tools"
+            }
         };
 
         Ok(ToolResult::success(help_text.to_string()))
+    }
+}
+
+impl Default for JsonToolsHandler {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -363,15 +373,15 @@ The json-read tool automatically handles large files via streaming without loadi
 impl ToolHandler for JsonToolsHandler {
     async fn get_tools(&self) -> anyhow::Result<Vec<Tool>> {
         let mut tools = Vec::new();
-        
+
         // Add all tool categories
         tools.extend(self.operations.get_tools().await?);
         tools.extend(self.query.get_tools().await?);
         tools.extend(self.streaming.get_tools().await?);
-        
+
         // Add help tool
         tools.push(Self::create_json_help_tool());
-        
+
         Ok(tools)
     }
 
@@ -380,14 +390,13 @@ impl ToolHandler for JsonToolsHandler {
             "json-help" => self.handle_json_help(&tool_call.arguments).await,
             name if name.starts_with("json-write") || name.starts_with("json-validate") => {
                 self.operations.call_tool(tool_call).await
-            },
-            name if name.starts_with("json-query") => {
-                self.query.call_tool(tool_call).await
-            },
-            name if name.starts_with("json-read") => {
-                self.streaming.call_tool(tool_call).await
-            },
-            _ => Ok(ToolResult::error(format!("Unknown tool: {}", tool_call.name))),
+            }
+            name if name.starts_with("json-query") => self.query.call_tool(tool_call).await,
+            name if name.starts_with("json-read") => self.streaming.call_tool(tool_call).await,
+            _ => Ok(ToolResult::error(format!(
+                "Unknown tool: {}",
+                tool_call.name
+            ))),
         }
     }
 }

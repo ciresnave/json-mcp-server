@@ -1,9 +1,10 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
 use json_mcp_server::json_tools::JsonToolsHandler;
 use json_mcp_server::mcp::{
     protocol::ToolCall,
     server::{MCPServer, ToolHandler},
 };
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
@@ -30,34 +31,44 @@ impl TestEnvironment {
         fs::write(&file_path, content).unwrap();
         file_path
     }
-
-    fn read_json_file(&self, name: &str) -> String {
-        let file_path = self.temp_path.join(name);
-        fs::read_to_string(file_path).unwrap()
-    }
 }
 
 fn create_args(pairs: &[(&str, Value)]) -> HashMap<String, Value> {
-    pairs.iter()
+    pairs
+        .iter()
         .map(|(k, v)| (k.to_string(), v.clone()))
         .collect()
 }
 
-async fn call_tool(handler: &JsonToolsHandler, name: &str, args: HashMap<String, Value>) -> Result<String, String> {
-    let result = handler.call_tool(ToolCall {
-        name: name.to_string(),
-        arguments: args,
-    }).await;
+async fn call_tool(
+    handler: &JsonToolsHandler,
+    name: &str,
+    args: HashMap<String, Value>,
+) -> Result<String, String> {
+    let result = handler
+        .call_tool(ToolCall {
+            name: name.to_string(),
+            arguments: args,
+        })
+        .await;
 
     match result {
         Ok(tool_result) => {
             if tool_result.is_error.unwrap_or(false) {
-                Err(tool_result.content.get(0).map(|c| c.text.clone()).unwrap_or_default())
+                Err(tool_result
+                    .content
+                    .first()
+                    .map(|c| c.text.clone())
+                    .unwrap_or_default())
             } else {
-                Ok(tool_result.content.get(0).map(|c| c.text.clone()).unwrap_or_default())
+                Ok(tool_result
+                    .content
+                    .first()
+                    .map(|c| c.text.clone())
+                    .unwrap_or_default())
             }
         }
-        Err(e) => Err(e.to_string())
+        Err(e) => Err(e.to_string()),
     }
 }
 
@@ -90,18 +101,14 @@ async fn test_complete_json_workflow() {
     assert!(result.is_ok(), "Failed to write initial data: {:?}", result);
 
     // 2. Validate the file
-    let validate_args = create_args(&[
-        ("file_path", json!(file_path.to_string_lossy())),
-    ]);
+    let validate_args = create_args(&[("file_path", json!(file_path.to_string_lossy()))]);
 
     let result = call_tool(&handler, "json-validate", validate_args).await;
     assert!(result.is_ok(), "Validation failed: {:?}", result);
     assert!(result.unwrap().contains("is valid"));
 
     // 3. Read the entire file
-    let read_args = create_args(&[
-        ("file_path", json!(file_path.to_string_lossy())),
-    ]);
+    let read_args = create_args(&[("file_path", json!(file_path.to_string_lossy()))]);
 
     let result = call_tool(&handler, "json-read", read_args).await;
     assert!(result.is_ok(), "Failed to read file: {:?}", result);
@@ -181,9 +188,7 @@ async fn test_all_write_modes() {
     assert!(result.is_ok());
 
     // Verify merge result
-    let read_args = create_args(&[
-        ("file_path", json!(file_path.to_string_lossy())),
-    ]);
+    let read_args = create_args(&[("file_path", json!(file_path.to_string_lossy()))]);
 
     let result = call_tool(&handler, "json-read", read_args).await;
     assert!(result.is_ok());
@@ -216,9 +221,7 @@ async fn test_all_write_modes() {
     assert!(result.is_ok());
 
     // Verify append
-    let read_array_args = create_args(&[
-        ("file_path", json!(array_file.to_string_lossy())),
-    ]);
+    let read_array_args = create_args(&[("file_path", json!(array_file.to_string_lossy()))]);
 
     let result = call_tool(&handler, "json-read", read_array_args).await;
     assert!(result.is_ok());
@@ -244,7 +247,7 @@ async fn test_complex_jsonpath_queries() {
                 },
                 {
                     "category": "fiction",
-                    "author": "Evelyn Waugh", 
+                    "author": "Evelyn Waugh",
                     "title": "Sword of Honour",
                     "price": 12.99
                 },
@@ -274,11 +277,20 @@ async fn test_complex_jsonpath_queries() {
     // Test various JSONPath queries
     let test_cases = vec![
         // All book titles
-        ("$.store.book[*].title", vec!["Sayings of the Century", "Sword of Honour", "Moby Dick"]),
+        (
+            "$.store.book[*].title",
+            vec!["Sayings of the Century", "Sword of Honour", "Moby Dick"],
+        ),
         // Books under $10
-        ("$.store.book[?(@.price < 10)].title", vec!["Sayings of the Century", "Moby Dick"]),
+        (
+            "$.store.book[?(@.price < 10)].title",
+            vec!["Sayings of the Century", "Moby Dick"],
+        ),
         // Fiction books
-        ("$.store.book[?(@.category == 'fiction')].author", vec!["Evelyn Waugh", "Herman Melville"]),
+        (
+            "$.store.book[?(@.category == 'fiction')].author",
+            vec!["Evelyn Waugh", "Herman Melville"],
+        ),
         // All prices in the store
         ("$.store..price", vec!["8.95", "12.99", "8.99", "19.95"]),
     ];
@@ -291,12 +303,16 @@ async fn test_complex_jsonpath_queries() {
 
         let result = call_tool(&handler, "json-query", query_args).await;
         assert!(result.is_ok(), "Query '{}' failed: {:?}", query, result);
-        
+
         let query_result = result.unwrap();
         for expected in expected_content {
-            assert!(query_result.contains(expected), 
-                   "Query '{}' result should contain '{}', but got: {}", 
-                   query, expected, query_result);
+            assert!(
+                query_result.contains(expected),
+                "Query '{}' result should contain '{}', but got: {}",
+                query,
+                expected,
+                query_result
+            );
         }
     }
 }
@@ -308,18 +324,14 @@ async fn test_error_handling() {
 
     // Test missing file
     let missing_file = env.temp_path.join("nonexistent.json");
-    let read_args = create_args(&[
-        ("file_path", json!(missing_file.to_string_lossy())),
-    ]);
+    let read_args = create_args(&[("file_path", json!(missing_file.to_string_lossy()))]);
 
     let result = call_tool(&handler, "json-read", read_args).await;
     assert!(result.is_err(), "Should fail for missing file");
 
     // Test invalid JSON
     let invalid_file = env.create_json_file("invalid.json", "{invalid json");
-    let validate_args = create_args(&[
-        ("file_path", json!(invalid_file.to_string_lossy())),
-    ]);
+    let validate_args = create_args(&[("file_path", json!(invalid_file.to_string_lossy()))]);
 
     let result = call_tool(&handler, "json-validate", validate_args).await;
     assert!(result.is_err(), "Should fail for invalid JSON");
@@ -383,7 +395,7 @@ async fn test_large_file_simulation() {
 
     let result = call_tool(&handler, "json-read", limited_read_args).await;
     assert!(result.is_ok(), "Failed to read with limit");
-    
+
     // Test reading with offset
     let offset_read_args = create_args(&[
         ("file_path", json!(file_path.to_string_lossy())),
@@ -410,7 +422,7 @@ async fn test_large_file_simulation() {
 #[tokio::test]
 async fn test_help_system_comprehensive() {
     let handler = JsonToolsHandler::new();
-    
+
     let help_topics = vec![
         ("", "JSON MCP Server Help"), // Default topic content
         ("overview", "JSON MCP Server Help"),
@@ -430,12 +442,21 @@ async fn test_help_system_comprehensive() {
         };
 
         let result = call_tool(&handler, "json-help", args).await;
-        assert!(result.is_ok(), "Help topic '{}' failed: {:?}", topic, result);
-        
+        assert!(
+            result.is_ok(),
+            "Help topic '{}' failed: {:?}",
+            topic,
+            result
+        );
+
         let help_content = result.unwrap();
-        assert!(help_content.contains(expected_content), 
-               "Help topic '{}' should contain '{}', but got: {}", 
-               topic, expected_content, help_content);
+        assert!(
+            help_content.contains(expected_content),
+            "Help topic '{}' should contain '{}', but got: {}",
+            topic,
+            expected_content,
+            help_content
+        );
     }
 }
 
@@ -443,7 +464,7 @@ async fn test_help_system_comprehensive() {
 async fn test_mcp_protocol_integration() {
     let handler = JsonToolsHandler::new();
     let mut server = MCPServer::new(handler);
-    
+
     // Test tool registration
     let result = server.register_tools().await;
     assert!(result.is_ok(), "Failed to register tools");
@@ -452,7 +473,7 @@ async fn test_mcp_protocol_integration() {
     let tools_request = r#"{"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}}"#;
     let response = server.handle_request(tools_request).await;
     assert!(response.is_ok(), "tools/list failed");
-    
+
     let response_str = response.unwrap();
     assert!(response_str.contains("json-read"));
     assert!(response_str.contains("json-write"));
@@ -463,15 +484,15 @@ async fn test_mcp_protocol_integration() {
     // Test actual tool call through MCP
     let env = TestEnvironment::new();
     let test_file = env.create_json_file("mcp_test.json", r#"{"test": "mcp integration"}"#);
-    
+
     let tool_call_request = format!(
         r#"{{"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {{"name": "json-validate", "arguments": {{"file_path": "{}"}}}}}}"#,
         test_file.to_string_lossy().replace('\\', "\\\\")
     );
-    
+
     let response = server.handle_request(&tool_call_request).await;
     assert!(response.is_ok(), "MCP tool call failed");
-    
+
     let response_str = response.unwrap();
     assert!(response_str.contains("is valid"));
 }
@@ -494,7 +515,10 @@ async fn test_tools_list_uses_camel_case_input_schema() {
     let tools = v["result"]["tools"].as_array().unwrap();
     assert_eq!(tools.len(), 5);
     for tool in tools {
-        assert!(tool["inputSchema"].is_object(), "missing inputSchema: {tool}");
+        assert!(
+            tool["inputSchema"].is_object(),
+            "missing inputSchema: {tool}"
+        );
         assert!(tool.get("input_schema").is_none());
     }
 }
@@ -518,10 +542,15 @@ async fn test_initialize_negotiates_version_and_ping_works() {
             r#"{{"jsonrpc":"2.0","id":1,"method":"initialize","params":{{"protocolVersion":"{version}","capabilities":{{}}}}}}"#
         )
     };
-    let v: Value = serde_json::from_str(&server.handle_request(&init("2025-03-26")).await.unwrap()).unwrap();
+    let v: Value =
+        serde_json::from_str(&server.handle_request(&init("2025-03-26")).await.unwrap()).unwrap();
     assert_eq!(v["result"]["protocolVersion"], "2025-03-26");
-    assert_eq!(v["result"]["serverInfo"]["version"], env!("CARGO_PKG_VERSION"));
-    let v: Value = serde_json::from_str(&server.handle_request(&init("1999-01-01")).await.unwrap()).unwrap();
+    assert_eq!(
+        v["result"]["serverInfo"]["version"],
+        env!("CARGO_PKG_VERSION")
+    );
+    let v: Value =
+        serde_json::from_str(&server.handle_request(&init("1999-01-01")).await.unwrap()).unwrap();
     assert_eq!(v["result"]["protocolVersion"], "2025-06-18");
 
     let pong = server
@@ -535,7 +564,9 @@ async fn test_initialize_negotiates_version_and_ping_works() {
 async fn test_tools_call_without_arguments_field() {
     let server = registered_server().await;
     let response = server
-        .handle_request(r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"json-help"}}"#)
+        .handle_request(
+            r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"json-help"}}"#,
+        )
         .await
         .unwrap();
     assert!(response.contains("JSON MCP Server Help"));

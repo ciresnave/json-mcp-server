@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT OR Apache-2.0
 """
 Test partial JSON recovery capabilities
 Check if server can extract valid data from partially malformed JSON

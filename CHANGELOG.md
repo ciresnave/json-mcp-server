@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.2.0
+
+First release since 0.1.0 on crates.io; includes everything in 0.1.17-0.1.19 below.
+
+### Changed (breaking)
+- Minimum supported Rust version is now 1.89 (was 1.75) and the crate uses edition 2024.
+- MCP output changed: `inputSchema`/`isError` field names, notifications are not answered, protocol version is negotiated (see 0.1.18).
+
+### Added
+- Hosted CI: fmt, clippy `-D warnings`, test, doc on Linux/Windows/macOS, MSRV, cargo-deny, cargo-audit, SPDX header check, CodeRipper portfolio job (advisory).
+- `docs/PATENT-SWEEP.md` completed: every hit's independent claims read, all clear.
+- `Cargo.lock` is tracked; every dependency is at its current release; every source file carries an SPDX header.
+
 ## 0.1.19
 
 ### Added

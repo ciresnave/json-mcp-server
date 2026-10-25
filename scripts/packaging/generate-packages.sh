@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: MIT OR Apache-2.0
 
 # Package Generation Script for All Package Managers
 # This script generates all package definitions with current version and checksums

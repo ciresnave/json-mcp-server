@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT OR Apache-2.0
 """
 Comprehensive JSON MCP Server Test Suite
 Tests all 5 tools with various scenarios to verify functionality.

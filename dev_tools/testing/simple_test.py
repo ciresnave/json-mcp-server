@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT OR Apache-2.0
 """
 Simple JSON MCP Server Test
 Tests the server using subprocess communication

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
 # Local Chocolatey Package Test Script
 # This simulates the GitHub Actions workflow locally
 

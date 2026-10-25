@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
 # Local Build and Package System
 # Comprehensive script to build all targets and create all packages locally
 

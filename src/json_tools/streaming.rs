@@ -1,8 +1,9 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
 use crate::mcp::protocol::{Tool, ToolCall, ToolResult};
 use crate::mcp::server::ToolHandler;
 use async_trait::async_trait;
-use serde_json::{json, Value};
 use jsonpath_rust::JsonPath;
+use serde_json::{Value, json};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -48,7 +49,10 @@ impl JsonStreaming {
         }
     }
 
-    async fn handle_stream_read(&self, args: &HashMap<String, Value>) -> anyhow::Result<ToolResult> {
+    async fn handle_stream_read(
+        &self,
+        args: &HashMap<String, Value>,
+    ) -> anyhow::Result<ToolResult> {
         let file_path = args.get("file_path")
             .and_then(|v| v.as_str())
             .ok_or_else(|| anyhow::anyhow!(
@@ -56,12 +60,8 @@ impl JsonStreaming {
             ))?;
 
         let query = args.get("query").and_then(|v| v.as_str());
-        let limit = args.get("limit")
-            .and_then(|v| v.as_u64())
-            .unwrap_or(1000) as usize;
-        let offset = args.get("offset")
-            .and_then(|v| v.as_u64())
-            .unwrap_or(0) as usize;
+        let limit = args.get("limit").and_then(|v| v.as_u64()).unwrap_or(1000) as usize;
+        let offset = args.get("offset").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
 
         // Try to stream the file
         let results = self.stream_json_file(file_path, query, limit, offset)?;
@@ -106,11 +106,12 @@ impl JsonStreaming {
             if let Some(Ok(line)) = lines.next() {
                 let line_clone = line.clone();
                 first_lines.push(line);
-                if line_clone.trim().starts_with('{') && line_clone.trim().ends_with('}') {
-                    if serde_json::from_str::<Value>(&line_clone).is_ok() {
-                        is_line_delimited = true;
-                        break;
-                    }
+                if line_clone.trim().starts_with('{')
+                    && line_clone.trim().ends_with('}')
+                    && serde_json::from_str::<Value>(&line_clone).is_ok()
+                {
+                    is_line_delimited = true;
+                    break;
                 }
             } else {
                 break;
@@ -121,7 +122,7 @@ impl JsonStreaming {
             // Process line-delimited JSON
             let file = File::open(file_path)?;
             let reader = BufReader::new(file);
-            
+
             for line in reader.lines() {
                 let line = line?;
                 if line.trim().is_empty() {
@@ -162,7 +163,7 @@ impl JsonStreaming {
 
             // If it's an array, we can stream through elements
             if let Value::Array(arr) = json_value {
-                for (_index, item) in arr.iter().enumerate() {
+                for item in arr.iter() {
                     if current_offset < offset {
                         current_offset += 1;
                         continue;
@@ -208,6 +209,12 @@ impl JsonStreaming {
     }
 }
 
+impl Default for JsonStreaming {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[async_trait]
 impl ToolHandler for JsonStreaming {
     async fn get_tools(&self) -> anyhow::Result<Vec<Tool>> {
@@ -217,7 +224,10 @@ impl ToolHandler for JsonStreaming {
     async fn call_tool(&self, tool_call: ToolCall) -> anyhow::Result<ToolResult> {
         match tool_call.name.as_str() {
             "json-read" => self.handle_stream_read(&tool_call.arguments).await,
-            _ => Ok(ToolResult::error(format!("Unknown tool: {}", tool_call.name))),
+            _ => Ok(ToolResult::error(format!(
+                "Unknown tool: {}",
+                tool_call.name
+            ))),
         }
     }
 }
