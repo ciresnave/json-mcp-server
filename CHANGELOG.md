@@ -10,6 +10,7 @@ First release since 0.1.0 on crates.io; includes everything in 0.1.17-0.1.19 bel
 
 ### Added
 - Hosted CI: fmt, clippy `-D warnings`, test, doc on Linux/Windows/macOS, MSRV, cargo-deny, cargo-audit, SPDX header check, CodeRipper portfolio job (advisory).
+- `docs/PATENT-SWEEP.md` completed: every hit's independent claims read, all clear.
 - `Cargo.lock` is tracked; every dependency is at its current release; every source file carries an SPDX header.
 
 ## 0.1.19
