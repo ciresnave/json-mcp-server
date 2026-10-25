@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
 use crate::json_tools::{operations::JsonOperations, query::JsonQuery, streaming::JsonStreaming};
 use crate::mcp::protocol::{Tool, ToolCall, ToolResult};
 use crate::mcp::server::ToolHandler;

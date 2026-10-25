@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
 use crate::mcp::protocol::{Tool, ToolCall, ToolResult};
 use crate::mcp::server::ToolHandler;
 use serde_json::{Value, json};

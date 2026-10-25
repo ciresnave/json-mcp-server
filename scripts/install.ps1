@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
 # JSON MCP Server Installation Script for Windows PowerShell
 # Supports installation via Cargo, pre-built binaries, and package managers
 

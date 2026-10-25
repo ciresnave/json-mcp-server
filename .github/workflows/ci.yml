@@ -75,3 +75,30 @@ jobs:
       - uses: EmbarkStudios/cargo-deny-action@3c6349835b2b7b196a839186cb8b78e02f7b5f25 # v2
         with:
           command: check advisories licenses bans sources
+
+  audit:
+    name: cargo audit (RustSec advisories for Cargo.lock)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Install cargo-audit
+        run: cargo install cargo-audit --locked
+      - name: cargo audit
+        run: cargo audit
+
+  spdx:
+    name: Every source file declares the licence
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Self-test the gate (it must be able to fail)
+        run: bash .github/spdx_gate.sh --self-test
+      - name: Every tracked source file declares the licence
+        run: bash .github/spdx_gate.sh
+
+  # The portfolio's CodeRipper checks (CireSnave 2026-10-23: advisory-only, non-blocking, everywhere). Not a
+  # required check; pinned to a commit on coderipper's main, read-only token, no secrets.
+  portfolio:
+    permissions:
+      contents: read
+    uses: ciresnave/coderipper/.github/workflows/portfolio.yml@33bd9292c7353df98fc7f00ef6887dc87954fa3b

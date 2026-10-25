@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: MIT OR Apache-2.0
 
 # JSON MCP Server Installation Script
 # Supports multiple installation methods across different platforms

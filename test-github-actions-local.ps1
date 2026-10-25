@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
 # Local GitHub Actions Simulation Test
 # This script simulates the exact steps that GitHub Actions performs
 # to catch issues before pushing to CI

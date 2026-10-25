@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
 use json_mcp_server::json_tools::JsonToolsHandler;
 use json_mcp_server::mcp::{
     protocol::ToolCall,
