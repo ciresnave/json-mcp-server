@@ -10,6 +10,9 @@ pub trait ToolHandler {
     async fn call_tool(&self, tool_call: ToolCall) -> anyhow::Result<ToolResult>;
 }
 
+/// Protocol revisions this server speaks, newest first.
+const SUPPORTED_PROTOCOL_VERSIONS: [&str; 3] = ["2025-06-18", "2025-03-26", "2024-11-05"];
+
 pub struct MCPServer {
     tools: HashMap<String, Tool>,
     handler: JsonToolsHandler,
@@ -31,10 +34,17 @@ impl MCPServer {
         Ok(())
     }
 
+    /// Handles one JSON-RPC message. Returns an empty string for a notification
+    /// (a message without an `id`), which must not be answered.
     pub async fn handle_request(&self, input: &str) -> anyhow::Result<String> {
         debug!("Handling request: {}", input);
 
         let request: MCPRequest = serde_json::from_str(input)?;
+
+        if request.id.is_none() {
+            // JSON-RPC notifications (e.g. notifications/initialized) get no response.
+            return Ok(String::new());
+        }
 
         let response = match request.method.as_str() {
             "tools/list" => {
@@ -55,25 +65,26 @@ impl MCPServer {
                 }
             }
             "initialize" => {
-                let capabilities = json!({
-                    "tools": {},
-                    "logging": {},
-                    "prompts": {},
-                    "resources": {}
-                });
+                // Echo the client's protocol version when we support it, else our latest.
+                let requested = request
+                    .params
+                    .as_ref()
+                    .and_then(|p| p.get("protocolVersion"))
+                    .and_then(Value::as_str);
+                let version = match requested {
+                    Some(v) if SUPPORTED_PROTOCOL_VERSIONS.contains(&v) => v,
+                    _ => SUPPORTED_PROTOCOL_VERSIONS[0],
+                };
                 MCPResponse::success(request.id, json!({
-                    "protocolVersion": "2024-11-05",
-                    "capabilities": capabilities,
+                    "protocolVersion": version,
+                    "capabilities": { "tools": {} },
                     "serverInfo": {
                         "name": "json-mcp-server",
-                        "version": "0.1.0"
+                        "version": env!("CARGO_PKG_VERSION")
                     }
                 }))
             }
-            "initialized" => {
-                // Notification - no response needed, but we'll send success
-                MCPResponse::success(request.id, json!({}))
-            }
+            "ping" => MCPResponse::success(request.id, json!({})),
             _ => MCPResponse::error(request.id, -32601, "Method not found"),
         };
 
