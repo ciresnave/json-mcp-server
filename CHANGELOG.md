@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.2
+
+### Changed
+- ROADMAP.md brought current after the 0.2.1 publish; HANDOFF.md added. Documentation only; not published to crates.io.
+
 ## 0.2.1
 
 ### Fixed
