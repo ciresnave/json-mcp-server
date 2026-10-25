@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
 class JsonMcpServer < Formula
   desc "High-performance Model Context Protocol server for JSON operations"
   homepage "https://github.com/ciresnave/json-mcp-server"

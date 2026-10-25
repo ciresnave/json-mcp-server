@@ -10,6 +10,9 @@ on:
         required: true
         default: 'latest'
 
+permissions:
+  contents: read
+
 env:
   CARGO_TERM_COLOR: always
 
@@ -22,7 +25,7 @@ jobs:
         os: [ubuntu-22.04, windows-2025, macos-14]
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
     
     - name: Test Installation Scripts with Real Binaries
       if: runner.os != 'Windows'
@@ -46,7 +49,7 @@ jobs:
     needs: test-release-downloads
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
     
     - name: Install Chocolatey
       shell: powershell
@@ -84,7 +87,7 @@ jobs:
     needs: test-release-downloads
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
     
     - name: Generate All Packages with Real Checksums
       run: |
@@ -100,7 +103,7 @@ jobs:
         fi
     
     - name: Upload Generated Packages
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
       with:
         name: release-ready-packages
         path: dist/

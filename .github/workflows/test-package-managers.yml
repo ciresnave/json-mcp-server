@@ -10,6 +10,9 @@ on:
     - cron: '0 3 * * *'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 env:
   CARGO_TERM_COLOR: always
 
@@ -19,13 +22,15 @@ jobs:
     runs-on: windows-latest
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
     
     - name: Setup Rust
-      uses: dtolnay/rust-toolchain@stable
+      uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+      with:
+        toolchain: stable
     
     - name: Build json-mcp-server
-      run: cargo build --release
+      run: cargo build --locked --release
     
     - name: Install Chocolatey
       shell: powershell
@@ -86,7 +91,7 @@ jobs:
     runs-on: windows-latest
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
     
     - name: Create Winget Manifest
       shell: powershell
@@ -143,13 +148,15 @@ jobs:
         os: [macos-14, macos-15]
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
     
     - name: Setup Rust
-      uses: dtolnay/rust-toolchain@stable
+      uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+      with:
+        toolchain: stable
     
     - name: Build json-mcp-server
-      run: cargo build --release
+      run: cargo build --locked --release
     
     - name: Install Homebrew
       run: |
@@ -189,7 +196,7 @@ jobs:
   test-aur:
     name: Test AUR Package
     runs-on: ubuntu-latest
-    container: archlinux:latest
+    container: archlinux:latest@sha256:52dfbd5afb23a220d5ee92dafcb4c788d96c026ed04179890c23adef4c897fa0@sha256:52dfbd5afb23a220d5ee92dafcb4c788d96c026ed04179890c23adef4c897fa0
     
     steps:
     - name: Install dependencies
@@ -200,7 +207,7 @@ jobs:
         useradd -m -G wheel -s /bin/bash builder
         echo 'builder ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
     
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       with:
         persist-credentials: false
     
@@ -229,7 +236,7 @@ jobs:
         
         check() {
             cd "\$pkgname-\$pkgver"
-            cargo test
+            cargo test --locked
         }
         
         package() {
@@ -262,13 +269,15 @@ jobs:
         method: [cargo]  # Only test cargo for now since we don't have releases yet
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
     
     - name: Setup Rust
-      uses: dtolnay/rust-toolchain@stable
+      uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+      with:
+        toolchain: stable
     
     - name: Cache Cargo
-      uses: actions/cache@v4
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
       with:
         path: |
           ~/.cargo/bin/
@@ -316,7 +325,7 @@ jobs:
         
         # Install the package with --force to handle existing binaries
         echo "📦 Installing json-mcp-server..."
-        cargo install --path . --force
+        cargo install --locked --path . --force
         
         # Test the installed binary
         echo "🧪 Testing installation..."
@@ -330,13 +339,15 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
     
     - name: Setup Rust
-      uses: dtolnay/rust-toolchain@stable
+      uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+      with:
+        toolchain: stable
     
     - name: Install via Cargo
-      run: cargo install --path . --force
+      run: cargo install --locked --path . --force
     
     - name: Run Integration Tests
       run: |
