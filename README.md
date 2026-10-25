@@ -14,13 +14,13 @@ A high-performance Rust-based Model Context Protocol (MCP) server that provides 
 
 ### Key Capabilities
 
-- **Large File Support**: Efficient pagination and streaming for files of any size
+- **Large File Support**: Pagination for any JSON file; line-by-line streaming for line-delimited JSON (a single large JSON document is parsed whole)
 - **JSONPath Querying**: Full JSONPath support for complex data extraction and filtering
-- **Flexible Writing**: Multiple modes (replace, merge_shallow, merge_deep, append) with backup options
+- **Flexible Writing**: Three modes (replace, merge, append)
 - **LLM-Optimized**: Detailed error messages and usage examples for optimal LLM interaction
-- **Memory Efficient**: Smart pagination prevents memory overflow on large datasets
+- **Bounded Output**: Pagination (`limit`/`offset`) keeps each response small
 - **MCP Compliant**: Full Model Context Protocol support with proper error handling
-- **Debug Logging**: File-based debug logging for troubleshooting without violating MCP protocol
+- **Debug Logging**: Set `MCP_DEBUG_LOG=<file>` to log every message to a file (off by default; stdout stays clean JSON-RPC)
 
 ## 📦 Installation
 
@@ -132,8 +132,7 @@ The JSON MCP Server communicates via JSON-RPC over stdin/stdout following the Mo
   "name": "json-read",
   "arguments": {
     "file_path": "./data.json",
-    "json_path": "$.users[*].name",
-    "format": "pretty"
+    "query": "$.users[*].name"
   }
 }
 ```
@@ -171,7 +170,7 @@ The JSON MCP Server communicates via JSON-RPC over stdin/stdout following the Mo
   "name": "json-read",
   "arguments": {
     "file_path": "./large-dataset.json",
-    "json_path": "$.records[*].id", 
+    "query": "$.records[*].id",
     "limit": 1000,
     "offset": 0
   }
@@ -186,10 +185,9 @@ Read and parse JSON files with optional JSONPath filtering and pagination.
 
 **Parameters:**
 - `file_path` (string, required): Path to JSON file
-- `json_path` (string, optional): JSONPath expression for filtering
-- `start_index` (integer, optional): Starting index for pagination (default: 0)
-- `limit` (integer, optional): Maximum items to return (default: 1000)
-- `output_format` (string, optional): Output format - "json", "pretty", "compact" (default: "json")
+- `query` (string, optional): JSONPath expression for filtering
+- `offset` (integer, optional): Number of results to skip (default: 0)
+- `limit` (integer, optional): Maximum results to return (default: 1000, max 10000)
 
 ### json-write
 
@@ -197,8 +195,10 @@ Write or update JSON files with flexible merge strategies.
 
 **Parameters:**
 - `file_path` (string, required): Path to JSON file
-- `content` (string, required): JSON content to write
-- `mode` (string, optional): Write mode - "replace", "merge_shallow", "merge_deep", "append" (default: "replace")
+- `data` (any JSON value, required): JSON data to write
+- `mode` (string, optional): "replace", "merge" (shallow object merge) or "append" (array append) (default: "replace")
+- `create_dirs` (boolean, optional): Create parent directories (default: true)
+- `pretty` (boolean, optional): Indent the output (default: true)
 
 ### json-query
 
@@ -206,8 +206,8 @@ Execute JSONPath queries on JSON files with various output formats.
 
 **Parameters:**
 - `file_path` (string, required): Path to JSON file
-- `json_path` (string, required): JSONPath query expression
-- `output_format` (string, optional): Output format - "json", "pretty", "compact", "csv", "markdown" (default: "json")
+- `query` (string, required): JSONPath query expression
+- `format` (string, optional): "json", "text" or "table" (default: "json")
 
 ### json-validate
 
@@ -215,13 +215,14 @@ Validate JSON file structure and syntax.
 
 **Parameters:**
 - `file_path` (string, required): Path to JSON file to validate
+- `schema` (any JSON value, optional): JSON schema to validate against
 
 ### json-help
 
-Get comprehensive help about available tools and JSONPath syntax.
+Get usage guidance for the tools.
 
 **Parameters:**
-- `topic` (string, optional): Help topic - "overview", "tools", "jsonpath", "examples", "troubleshooting" (default: "overview")
+- `topic` (string, optional): Help topic - "overview", "reading", "writing", "querying", "streaming", "examples", "tools" (default: "overview")
 
 ## JSONPath Support
 
@@ -257,15 +258,13 @@ $.products[?(@.category == 'electronics' && @.price < 500)].name
 ## Performance Notes
 
 ### Large File Handling
-- Files of any size: The `json-read` tool automatically uses streaming for memory efficiency
-- Line-delimited JSON: Automatically detected and processed efficiently  
-- Memory usage: Streaming keeps memory usage constant regardless of file size
+- Line-delimited JSON: detected from the first lines of the file and read record by record, so memory stays small regardless of file size
+- A single large JSON document is parsed whole before paging, so memory grows with file size
 
 ### Best Practices
 - Use specific JSONPath queries to filter data early
 - Set reasonable limits when processing large datasets
 - Use offset for pagination through large result sets
-- The server automatically optimizes for file size and available memory
 
 ## Error Handling
 
@@ -311,6 +310,16 @@ The JSON MCP Server works with any MCP-compatible client. Detailed configuration
   }
 }
 ```
+
+**Gemini CLI** (`.gemini/settings.json`) and **Cline** use the same shape:
+```json
+{
+  "mcpServers": {
+    "json-mcp-server": { "command": "json-mcp-server", "args": [] }
+  }
+}
+```
+If a client cannot connect, add `"env": { "MCP_DEBUG_LOG": "/tmp/json-mcp.log" }` to the server entry and read the log of every message exchanged.
 
 For detailed setup instructions, troubleshooting, and advanced configurations, see the respective client guides in the `examples/mcp_clients/` directory.
 

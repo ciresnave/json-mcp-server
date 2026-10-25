@@ -97,10 +97,9 @@ Reads and parses JSON files with automatic streaming for large files.
 
 **Parameters:**
 - `file_path` (required): Path to JSON file
-- `json_path` (optional): JSONPath to extract specific data
-- `format` (optional): Output format - "pretty", "compact", "raw" (default: "pretty")
-- `offset` (optional): Starting position for streaming (default: 0)
-- `limit` (optional): Maximum number of items to return (default: 1000)
+- `query` (optional): JSONPath to extract specific data
+- `offset` (optional): Number of results to skip (default: 0)
+- `limit` (optional): Maximum number of results to return (default: 1000)
 
 **Examples:**
 ```json
@@ -117,8 +116,7 @@ Reads and parses JSON files with automatic streaming for large files.
   "name": "json-read", 
   "arguments": {
     "file_path": "./users.json",
-    "json_path": "$.users[*].name",
-    "format": "compact"
+    "query": "$.users[*].name"
   }
 }
 ```
@@ -140,8 +138,8 @@ Creates or updates JSON files with flexible merge strategies.
 - `file_path` (required): Path to JSON file
 - `data` (required): JSON data to write
 - `mode` (optional): Write mode - "replace", "merge", "append" (default: "replace")
-- `create_path` (optional): Create directory if needed (default: true)
-- `backup` (optional): Create backup before writing (default: false)
+- `create_dirs` (optional): Create parent directories if needed (default: true)
+- `pretty` (optional): Indent the written JSON (default: true)
 
 **Write Modes:**
 - **replace**: Completely replace file content
@@ -221,21 +219,20 @@ Execute complex JSONPath queries on JSON files.
                 r#"# Streaming Large JSON Files
 
 ## json-read Tool (Automatic Streaming)
-The json-read tool automatically handles large files via streaming without loading everything into memory.
+The json-read tool reads line-delimited JSON (one object per line) record by record, so large `.jsonl` files are not loaded whole. A single large JSON document is parsed in full before its elements are paged, so it needs memory proportional to the file.
 
 **Streaming Features:**
 - Automatically detects when to use streaming mode
-- Handle files larger than available RAM
+- Line-delimited JSON files larger than available RAM
 - Fast queries on massive datasets  
 - Memory-efficient processing
 - Progressive results for interactive use
 
 **Parameters for Large Files:**
 - `file_path` (required): Path to large JSON file
-- `json_path` (optional): JSONPath to filter data during streaming
+- `query` (optional): JSONPath to filter each record
 - `limit` (optional): Maximum number of results (default: 1000)
 - `offset` (optional): Skip number of results (default: 0)
-- `format` (optional): Output format - "pretty", "compact", "raw"
 
 **Examples:**
 ```json
@@ -243,7 +240,7 @@ The json-read tool automatically handles large files via streaming without loadi
   "name": "json-read",
   "arguments": {
     "file_path": "./large-dataset.json",
-    "json_path": "$.records[*].id",
+    "query": "$.records[*].id",
     "limit": 100
   }
 }
@@ -292,7 +289,7 @@ The json-read tool automatically handles large files via streaming without loadi
 // Read large log file with automatic streaming
 {"name": "json-read", "arguments": {
   "file_path": "./logs.json",
-  "json_path": "$.logs[?(@.level == 'ERROR')]",
+  "query": "$.logs[?(@.level == 'ERROR')]",
   "limit": 50
 }}
 ```
@@ -302,7 +299,7 @@ The json-read tool automatically handles large files via streaming without loadi
 // Extract specific fields
 {"name": "json-read", "arguments": {
   "file_path": "./api-response.json",
-  "json_path": "$.data.items[*].{id: id, name: name}"
+  "query": "$.data.items[*].name"
 }}
 ```
 

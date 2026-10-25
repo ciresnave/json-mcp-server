@@ -1,6 +1,6 @@
 [package]
 name = "json-mcp-server"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2024"
 description = "A high-performance Model Context Protocol (MCP) server for comprehensive JSON file operations optimized for LLM interactions"
 authors = ["Eric Evans <CireSnave@gmail.com>"]
@@ -11,6 +11,7 @@ license = "MIT OR Apache-2.0"
 keywords = ["json", "mcp", "llm", "jsonpath", "protocol"]
 categories = ["command-line-utilities", "development-tools", "parser-implementations"]
 readme = "README.md"
+include = ["/src/**", "/tests/**", "/examples/**", "/README.md", "/CHANGELOG.md", "/LICENSE-MIT", "/LICENSE-APACHE", "/Cargo.toml", "/Cargo.lock"]
 rust-version = "1.89"
 
 [dependencies]
