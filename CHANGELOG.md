@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.0
+
+### Breaking
+- Error codes changed: a `tools/call` for an unknown tool is now a JSON-RPC protocol error (-32602), as the spec requires, instead of a tool result with `isError: true`; malformed `tools/call` params also return -32602 (was -32603). Clients that matched the old behaviour must be updated.
+
+### Added
+- MCP revision 2026-07-28 (current as of 2026-10-25): `server/discover`, per-request `_meta` protocol version (served statelessly), `resultType` on results, `ttlMs`/`cacheScope` on `tools/list` and `server/discover`, and `UnsupportedProtocolVersionError` (-32022) listing the supported versions. The server is dual-era: `initialize` and the handshake revisions 2025-11-25, 2025-06-18, 2025-03-26 and 2024-11-05 still work.
+
+### Changed
+- `tools/list` returns tools sorted by name (deterministic order).
+
 ## 0.2.3
 
 ### Changed
