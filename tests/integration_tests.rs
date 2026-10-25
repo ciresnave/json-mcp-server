@@ -515,7 +515,10 @@ async fn test_tools_list_uses_camel_case_input_schema() {
     let tools = v["result"]["tools"].as_array().unwrap();
     assert_eq!(tools.len(), 5);
     for tool in tools {
-        assert!(tool["inputSchema"].is_object(), "missing inputSchema: {tool}");
+        assert!(
+            tool["inputSchema"].is_object(),
+            "missing inputSchema: {tool}"
+        );
         assert!(tool.get("input_schema").is_none());
     }
 }
@@ -539,10 +542,15 @@ async fn test_initialize_negotiates_version_and_ping_works() {
             r#"{{"jsonrpc":"2.0","id":1,"method":"initialize","params":{{"protocolVersion":"{version}","capabilities":{{}}}}}}"#
         )
     };
-    let v: Value = serde_json::from_str(&server.handle_request(&init("2025-03-26")).await.unwrap()).unwrap();
+    let v: Value =
+        serde_json::from_str(&server.handle_request(&init("2025-03-26")).await.unwrap()).unwrap();
     assert_eq!(v["result"]["protocolVersion"], "2025-03-26");
-    assert_eq!(v["result"]["serverInfo"]["version"], env!("CARGO_PKG_VERSION"));
-    let v: Value = serde_json::from_str(&server.handle_request(&init("1999-01-01")).await.unwrap()).unwrap();
+    assert_eq!(
+        v["result"]["serverInfo"]["version"],
+        env!("CARGO_PKG_VERSION")
+    );
+    let v: Value =
+        serde_json::from_str(&server.handle_request(&init("1999-01-01")).await.unwrap()).unwrap();
     assert_eq!(v["result"]["protocolVersion"], "2025-06-18");
 
     let pong = server
@@ -556,7 +564,9 @@ async fn test_initialize_negotiates_version_and_ping_works() {
 async fn test_tools_call_without_arguments_field() {
     let server = registered_server().await;
     let response = server
-        .handle_request(r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"json-help"}}"#)
+        .handle_request(
+            r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"json-help"}}"#,
+        )
         .await
         .unwrap();
     assert!(response.contains("JSON MCP Server Help"));

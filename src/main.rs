@@ -28,9 +28,8 @@ async fn main() -> anyhow::Result<()> {
     // Use --log-level debug if debugging is needed (will output to stderr)
 
     // Opt-in MCP message tracing: set MCP_DEBUG_LOG to a file path.
-    let mut debug_log = std::env::var_os("MCP_DEBUG_LOG").and_then(|path| {
-        OpenOptions::new().create(true).append(true).open(path).ok()
-    });
+    let mut debug_log = std::env::var_os("MCP_DEBUG_LOG")
+        .and_then(|path| OpenOptions::new().create(true).append(true).open(path).ok());
 
     // Create the JSON tools handler
     let json_handler = JsonToolsHandler::new();
