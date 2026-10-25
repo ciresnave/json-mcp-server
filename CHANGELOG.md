@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.3
+
+### Changed
+- Workflows: every `uses:` is pinned to a full commit SHA with its version in a comment; `archlinux:latest` is pinned by digest; `dtolnay/rust-toolchain` names its channel explicitly.
+- Workflows: top-level `permissions: contents: read` everywhere; `contents: write` only on the two jobs that attach files to a release; the unused `packages: write` is dropped.
+- Workflows: `cargo build`/`test`/`install` run with `--locked`.
+- `.github/CODEOWNERS` added. Not published to crates.io (no change to the crate).
+
 ## 0.2.2
 
 ### Changed
