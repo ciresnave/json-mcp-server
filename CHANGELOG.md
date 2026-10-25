@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.19
+
+### Added
+- `docs/PATENT-SWEEP.md`: patent sweep record for the 0.1.x/0.2.0 line.
+
 ## 0.1.18
 
 ### Fixed
