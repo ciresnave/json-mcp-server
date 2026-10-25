@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.1
+
+### Fixed
+- `test-package-managers.yml`: the Arch Linux job container reference had its digest doubled by the 0.2.3 pinning (`archlinux:latest@sha256:...@sha256:...`), so Docker rejected it; now a single digest.
+
+### Changed
+- ROADMAP.md and HANDOFF.md brought current after the 0.3.0 publish. CI and docs only; not published to crates.io.
+
 ## 0.3.0
 
 ### Breaking
