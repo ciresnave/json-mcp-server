@@ -551,7 +551,7 @@ async fn test_initialize_negotiates_version_and_ping_works() {
     );
     let v: Value =
         serde_json::from_str(&server.handle_request(&init("1999-01-01")).await.unwrap()).unwrap();
-    assert_eq!(v["result"]["protocolVersion"], "2025-06-18");
+    assert_eq!(v["result"]["protocolVersion"], "2025-11-25");
 
     let pong = server
         .handle_request(r#"{"jsonrpc":"2.0","id":9,"method":"ping"}"#)
@@ -570,4 +570,97 @@ async fn test_tools_call_without_arguments_field() {
         .await
         .unwrap();
     assert!(response.contains("JSON MCP Server Help"));
+}
+
+const MODERN_META: &str = r#""_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientInfo":{"name":"t","version":"1"},"io.modelcontextprotocol/clientCapabilities":{}}"#;
+
+async fn request_json(server: &MCPServer, body: &str) -> Value {
+    serde_json::from_str(&server.handle_request(body).await.unwrap()).unwrap()
+}
+
+#[tokio::test]
+async fn test_server_discover() {
+    let server = registered_server().await;
+    let body = format!(
+        r#"{{"jsonrpc":"2.0","id":"d","method":"server/discover","params":{{{MODERN_META}}}}}"#
+    );
+    let v = request_json(&server, &body).await;
+    let r = &v["result"];
+    assert_eq!(r["resultType"], "complete");
+    assert_eq!(r["supportedVersions"][0], "2026-07-28");
+    assert!(r["capabilities"]["tools"].is_object());
+    assert_eq!(
+        r["_meta"]["io.modelcontextprotocol/serverInfo"]["name"],
+        "json-mcp-server"
+    );
+    assert!(r["ttlMs"].as_u64().is_some());
+    assert_eq!(r["cacheScope"], "public");
+}
+
+#[tokio::test]
+async fn test_modern_tools_list_and_call() {
+    let server = registered_server().await;
+    let list =
+        format!(r#"{{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{{{MODERN_META}}}}}"#);
+    let v = request_json(&server, &list).await;
+    assert_eq!(v["result"]["resultType"], "complete");
+    assert!(v["result"]["ttlMs"].as_u64().is_some());
+    let names: Vec<&str> = v["result"]["tools"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|t| t["name"].as_str().unwrap())
+        .collect();
+    let mut sorted = names.clone();
+    sorted.sort_unstable();
+    assert_eq!(
+        names, sorted,
+        "tools must come back in a deterministic order"
+    );
+
+    let call = format!(
+        r#"{{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{{"name":"json-help",{MODERN_META}}}}}"#
+    );
+    let v = request_json(&server, &call).await;
+    assert_eq!(v["result"]["resultType"], "complete");
+    assert!(
+        v["result"]["content"][0]["text"]
+            .as_str()
+            .unwrap()
+            .contains("JSON MCP Server Help")
+    );
+}
+
+#[tokio::test]
+async fn test_legacy_results_have_no_modern_fields() {
+    let server = registered_server().await;
+    let v = request_json(&server, r#"{"jsonrpc":"2.0","id":1,"method":"tools/list"}"#).await;
+    assert!(v["result"].get("resultType").is_none());
+    assert!(v["result"].get("ttlMs").is_none());
+}
+
+#[tokio::test]
+async fn test_unsupported_protocol_version_error() {
+    let server = registered_server().await;
+    let body = r#"{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"1900-01-01"}}}"#;
+    let v = request_json(&server, body).await;
+    assert_eq!(v["error"]["code"], -32022);
+    assert_eq!(v["error"]["data"]["requested"], "1900-01-01");
+    assert_eq!(v["error"]["data"]["supported"][0], "2026-07-28");
+    assert_eq!(v["id"], 1);
+}
+
+#[tokio::test]
+async fn test_unknown_tool_is_a_protocol_error() {
+    let server = registered_server().await;
+    let body =
+        r#"{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"nope","arguments":{}}}"#;
+    let v = request_json(&server, body).await;
+    assert_eq!(v["error"]["code"], -32602);
+    assert!(
+        v["error"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("Unknown tool: nope")
+    );
 }
