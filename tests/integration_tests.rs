@@ -475,3 +475,68 @@ async fn test_mcp_protocol_integration() {
     let response_str = response.unwrap();
     assert!(response_str.contains("is valid"));
 }
+
+async fn registered_server() -> MCPServer {
+    let mut server = MCPServer::new(JsonToolsHandler::new());
+    server.register_tools().await.unwrap();
+    server
+}
+
+#[tokio::test]
+async fn test_tools_list_uses_camel_case_input_schema() {
+    // Issue #1: clients reject tools without `inputSchema`.
+    let server = registered_server().await;
+    let response = server
+        .handle_request(r#"{"jsonrpc":"2.0","id":1,"method":"tools/list"}"#)
+        .await
+        .unwrap();
+    let v: Value = serde_json::from_str(&response).unwrap();
+    let tools = v["result"]["tools"].as_array().unwrap();
+    assert_eq!(tools.len(), 5);
+    for tool in tools {
+        assert!(tool["inputSchema"].is_object(), "missing inputSchema: {tool}");
+        assert!(tool.get("input_schema").is_none());
+    }
+}
+
+#[tokio::test]
+async fn test_notifications_get_no_response() {
+    // Issue #2: answering notifications/initialized with an id:null error breaks strict clients.
+    let server = registered_server().await;
+    let response = server
+        .handle_request(r#"{"jsonrpc":"2.0","method":"notifications/initialized"}"#)
+        .await
+        .unwrap();
+    assert!(response.is_empty());
+}
+
+#[tokio::test]
+async fn test_initialize_negotiates_version_and_ping_works() {
+    let server = registered_server().await;
+    let init = |version: &str| {
+        format!(
+            r#"{{"jsonrpc":"2.0","id":1,"method":"initialize","params":{{"protocolVersion":"{version}","capabilities":{{}}}}}}"#
+        )
+    };
+    let v: Value = serde_json::from_str(&server.handle_request(&init("2025-03-26")).await.unwrap()).unwrap();
+    assert_eq!(v["result"]["protocolVersion"], "2025-03-26");
+    assert_eq!(v["result"]["serverInfo"]["version"], env!("CARGO_PKG_VERSION"));
+    let v: Value = serde_json::from_str(&server.handle_request(&init("1999-01-01")).await.unwrap()).unwrap();
+    assert_eq!(v["result"]["protocolVersion"], "2025-06-18");
+
+    let pong = server
+        .handle_request(r#"{"jsonrpc":"2.0","id":9,"method":"ping"}"#)
+        .await
+        .unwrap();
+    assert!(pong.contains(r#""result":{}"#));
+}
+
+#[tokio::test]
+async fn test_tools_call_without_arguments_field() {
+    let server = registered_server().await;
+    let response = server
+        .handle_request(r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"json-help"}}"#)
+        .await
+        .unwrap();
+    assert!(response.contains("JSON MCP Server Help"));
+}

@@ -32,19 +32,21 @@ pub struct MCPError {
 pub struct Tool {
     pub name: String,
     pub description: String,
+    #[serde(rename = "inputSchema")]
     pub input_schema: Value,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ToolCall {
     pub name: String,
+    #[serde(default)]
     pub arguments: HashMap<String, Value>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ToolResult {
     pub content: Vec<ToolContent>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "isError", skip_serializing_if = "Option::is_none")]
     pub is_error: Option<bool>,
 }
 

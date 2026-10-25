@@ -29,12 +29,10 @@ async fn main() -> anyhow::Result<()> {
     // Tracing disabled for MCP compliance - stdout must be clean JSON-RPC only
     // Use --log-level debug if debugging is needed (will output to stderr)
 
-    // Create debug log file for MCP message tracing
-    let mut debug_log = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open("mcp_debug.log")
-        .ok();
+    // Opt-in MCP message tracing: set MCP_DEBUG_LOG to a file path.
+    let mut debug_log = std::env::var_os("MCP_DEBUG_LOG").and_then(|path| {
+        OpenOptions::new().create(true).append(true).open(path).ok()
+    });
 
     // Create the JSON tools handler
     let json_handler = JsonToolsHandler::new();
@@ -64,6 +62,7 @@ async fn main() -> anyhow::Result<()> {
                 }
 
                 match server.handle_request(&input).await {
+                    Ok(response) if response.is_empty() => {}
                     Ok(response) => {
                         // Log outgoing response
                         if let Some(ref mut log) = debug_log {
