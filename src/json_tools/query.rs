@@ -1,8 +1,8 @@
 use crate::mcp::protocol::{Tool, ToolCall, ToolResult};
 use crate::mcp::server::ToolHandler;
 use async_trait::async_trait;
-use serde_json::{json, Value};
 use jsonpath_rust::JsonPath;
+use serde_json::{Value, json};
 use std::collections::HashMap;
 use std::fs;
 
@@ -53,7 +53,8 @@ impl JsonQuery {
                 "query is required. Usage example:\n{{\n  \"file_path\": \"./data.json\",\n  \"query\": \"$.users[0].name\"\n}}\nUse JSONPath syntax: $ (root), .property, [index], [?(@.condition)]"
             ))?;
 
-        let format = args.get("format")
+        let format = args
+            .get("format")
             .and_then(|v| v.as_str())
             .unwrap_or("json");
 
@@ -69,8 +70,8 @@ impl JsonQuery {
         let results = match json_value.query(query) {
             Ok(values) => {
                 // Convert the results to JSON values
-                values.into_iter().map(|v| v.clone()).collect::<Vec<Value>>()
-            },
+                values.into_iter().cloned().collect::<Vec<Value>>()
+            }
             Err(e) => return Ok(ToolResult::error(format!("JSONPath query error: {}", e))),
         };
 
@@ -91,15 +92,14 @@ impl JsonQuery {
 
     fn format_as_text(&self, value: &Value) -> String {
         match value {
-            Value::Array(arr) => {
-                arr.iter()
-                    .map(|v| match v {
-                        Value::String(s) => s.clone(),
-                        _ => v.to_string().trim_matches('"').to_string(),
-                    })
-                    .collect::<Vec<_>>()
-                    .join("\n")
-            },
+            Value::Array(arr) => arr
+                .iter()
+                .map(|v| match v {
+                    Value::String(s) => s.clone(),
+                    _ => v.to_string().trim_matches('"').to_string(),
+                })
+                .collect::<Vec<_>>()
+                .join("\n"),
             Value::String(s) => s.clone(),
             _ => value.to_string().trim_matches('"').to_string(),
         }
@@ -116,17 +116,26 @@ impl JsonQuery {
                 if let Some(Value::Object(first_obj)) = arr.first() {
                     let headers: Vec<String> = first_obj.keys().cloned().collect();
                     let mut table = vec![headers.join(" | ")];
-                    table.push(headers.iter().map(|_| "---").collect::<Vec<_>>().join(" | "));
+                    table.push(
+                        headers
+                            .iter()
+                            .map(|_| "---")
+                            .collect::<Vec<_>>()
+                            .join(" | "),
+                    );
 
                     for item in arr {
                         if let Value::Object(obj) = item {
-                            let row: Vec<String> = headers.iter()
-                                .map(|h| obj.get(h)
-                                    .map(|v| match v {
-                                        Value::String(s) => s.clone(),
-                                        _ => v.to_string().trim_matches('"').to_string(),
-                                    })
-                                    .unwrap_or_else(|| "".to_string()))
+                            let row: Vec<String> = headers
+                                .iter()
+                                .map(|h| {
+                                    obj.get(h)
+                                        .map(|v| match v {
+                                            Value::String(s) => s.clone(),
+                                            _ => v.to_string().trim_matches('"').to_string(),
+                                        })
+                                        .unwrap_or_else(|| "".to_string())
+                                })
                                 .collect();
                             table.push(row.join(" | "));
                         }
@@ -136,16 +145,28 @@ impl JsonQuery {
                     // Simple list format
                     arr.iter()
                         .enumerate()
-                        .map(|(i, v)| format!("{}: {}", i + 1, match v {
-                            Value::String(s) => s.clone(),
-                            _ => v.to_string().trim_matches('"').to_string(),
-                        }))
+                        .map(|(i, v)| {
+                            format!(
+                                "{}: {}",
+                                i + 1,
+                                match v {
+                                    Value::String(s) => s.clone(),
+                                    _ => v.to_string().trim_matches('"').to_string(),
+                                }
+                            )
+                        })
                         .collect::<Vec<_>>()
                         .join("\n")
                 }
-            },
+            }
             _ => value.to_string().trim_matches('"').to_string(),
         }
+    }
+}
+
+impl Default for JsonQuery {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -158,7 +179,10 @@ impl ToolHandler for JsonQuery {
     async fn call_tool(&self, tool_call: ToolCall) -> anyhow::Result<ToolResult> {
         match tool_call.name.as_str() {
             "json-query" => self.handle_query(&tool_call.arguments).await,
-            _ => Ok(ToolResult::error(format!("Unknown tool: {}", tool_call.name))),
+            _ => Ok(ToolResult::error(format!(
+                "Unknown tool: {}",
+                tool_call.name
+            ))),
         }
     }
 }

@@ -1,15 +1,12 @@
 use clap::Parser;
-use std::io::{self, BufRead, Write};
 use std::fs::OpenOptions;
+use std::io::{self, BufRead, Write};
 
 mod json_tools;
 mod mcp;
 
 use json_tools::JsonToolsHandler;
-use mcp::{
-    protocol::MCPResponse,
-    server::MCPServer,
-};
+use mcp::{protocol::MCPResponse, server::MCPServer};
 
 #[derive(Parser)]
 #[command(
@@ -79,17 +76,15 @@ async fn main() -> anyhow::Result<()> {
                         }
                     }
                     Err(e) => {
-                        let error_response = MCPResponse::error(
-                            None,
-                            -32603,
-                            &format!("Internal error: {}", e),
-                        );
+                        let error_response =
+                            MCPResponse::error(None, -32603, &format!("Internal error: {}", e));
                         let response_str = serde_json::to_string(&error_response)?;
-                        
+
                         // Log outgoing error response
                         if let Some(ref mut log) = debug_log {
                             let timestamp = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S%.3f");
-                            let _ = writeln!(log, "[{}] ERROR_OUTGOING: {}", timestamp, response_str);
+                            let _ =
+                                writeln!(log, "[{}] ERROR_OUTGOING: {}", timestamp, response_str);
                             let _ = log.flush();
                         }
 
