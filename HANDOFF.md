@@ -5,7 +5,7 @@ Take-over by the PM on 2026-10-25 ("json-mcp-server has a lane. We maintain it."
 ## State
 - crates.io 0.3.0 (tag v0.3.0 at 0d6e840): MCP 2026-07-28 dual-era, breaking error codes (unknown tool / bad params = -32602). 0.2.1 (tag v0.2.1) carried the `inputSchema` fix. 0.3.1 is docs/CI only, not published.
 - Branch protection: 7 required contexts (3-OS build/test, MSRV, deny, audit, SPDX). CI = `.github/workflows/ci.yml`. Packaging workflows (`test-package-managers.yml`, `test-prebuilt.yml`) run on push to main/schedule only; they are not required.
-- Patent sweep: `docs/PATENT-SWEEP.md` (0.1.x/0.2.x, all clear). It does not cover the 0.3.0 stateless/discover change as a new capability family: re-sweep before the next feature release, and by 2027-10-25 at the latest.
+- Patent sweep: `docs/PATENT-SWEEP.md` covers 0.1.x-0.3.x (second pass 2026-10-26 for the 0.3.0 discovery/dual-era/cache-hint ideas, all clear). Re-sweep before a release that adds a new capability family, and by 2027-10-25 at the latest; keep it naming the manifest version (CodeRipper 0.10 `patent-sweep-record` rule, advisory).
 - Workflows pinned to SHAs, least permissions; `coderipper fast --profile extended` is clean for SUP-008/SUP-001 (only the accepted LICENSE-holder findings remain).
 
 ## Tasks held

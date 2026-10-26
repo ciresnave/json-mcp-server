@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.2
+
+### Changed
+- `docs/PATENT-SWEEP.md` re-swept for the 0.3.x line (MCP revision 2026-07-28: discovery, dual-era serving, cache hints): 6 more hits read, all clear. Docs only; not published to crates.io.
+
 ## 0.3.1
 
 ### Fixed
