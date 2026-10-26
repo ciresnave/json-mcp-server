@@ -1,7 +1,8 @@
-# Patent sweep: json-mcp-server 0.1.x line (covers the 0.2.0 release) @ 8a8b135
+# Patent sweep: json-mcp-server 0.3.x line (swept at manifest 0.3.1, so 0.3.2 is docs-only; first pass covered 0.1.x-0.2.x) @ 8264791
 
-Date: 2026-10-25; Run by: json-mcp-server lane, Claude Sonnet 5.5; Method: AI-assisted search and read; **NOT legal advice; NOT a freedom-to-operate opinion.**
-Swept commit is `origin/main` 8a8b135 (functionally identical to what 0.2.0 ships: PRs #3 and #4 change protocol serialisation, dependencies, CI and licence headers, not the mechanisms below).
+Date: 2026-10-25 (first pass) and 2026-10-26 (second pass, 0.3.x additions); Run by: json-mcp-server lane, Claude Sonnet 5.5; Method: AI-assisted search and read; **NOT legal advice; NOT a freedom-to-operate opinion.**
+First pass: `origin/main` 8a8b135 (functionally what 0.2.x ships: PRs #3 and #4 change protocol serialisation, dependencies, CI and licence headers, not the mechanisms of ideas 1-7).
+Second pass: `origin/main` 8264791, which ships 0.3.0 (MCP revision 2026-07-28, PR #9) and the CI/docs-only 0.3.1. Ideas 8-10 are new in 0.3.0 and were swept in the second pass; ideas 1-7 are unchanged in 0.3.x.
 
 ## Ideas swept
 1. A server that exposes JSON-file operations (read, write, query, validate, help) as tools that a language-model client discovers with `tools/list` and invokes with `tools/call` over JSON-RPC on stdio (Model Context Protocol).
@@ -11,6 +12,9 @@ Swept commit is `origin/main` 8a8b135 (functionally identical to what 0.2.0 ship
 5. Writing a JSON file in `replace`, `merge` (object merge into the existing file) or `append` (array append) mode.
 6. Validating a JSON file and returning a parse error message intended for an LLM to act on.
 7. A `json-help` tool that returns usage guidance to the LLM client as tool output.
+8. A server that answers a `server/discover` request with the protocol versions it supports, its capabilities and its identity, and answers a request that names an unsupported protocol version with an error that lists the supported versions (0.3.0).
+9. A server that serves both handshake-based clients (`initialize`, version negotiated once per process) and stateless clients (protocol version carried in every request's metadata), choosing the behaviour from how the client opens (0.3.0).
+10. Returning a time-to-live and a public/private cache scope with the tool list and the discovery result (0.3.0).
 
 Note for accuracy (not a patent matter): the non-line-delimited path parses the whole file before iterating, so "streams files of any size" in the README overstates idea 3; this record sweeps what the code does.
 
@@ -19,7 +23,11 @@ Note for accuracy (not a patent matter): the non-line-delimited path parses the 
 2. `method streaming parse large JSON file automatically select streaming based on file size JSONPath query`
 3. `line-delimited JSON detect format sampling first lines apply path query each record`
 4. `model context protocol server exposes tools to language model JSON-RPC stdio tool listing`
-Only these four queries (plus two title searches to find the Airia family) were run, on one search source (no direct USPTO/EPO/WIPO query). Claims were read with `tools/patent-claims.py` (Google Patents text, machine-converted).
+Second pass (2026-10-26, same source), for ideas 8-10:
+5. `method server responds to discovery request listing supported protocol versions and capabilities, per-request protocol version in request metadata, unsupported version error listing supported versions`
+6. `stateless server serves both legacy handshake session protocol and per-request metadata protocol selecting behavior by whether request carries version metadata or initialize`
+7. `response cache time-to-live hint and cache scope public private included in server list result tool list model context protocol`
+Only the first four queries (plus two title searches to find the Airia family) were run, on one search source (no direct USPTO/EPO/WIPO query). Claims were read with `tools/patent-claims.py` (Google Patents text, machine-converted).
 
 ## Hits
 | # | patent | title | assignee | status | claim(s) read | overlap | our difference | verdict |
@@ -36,9 +44,15 @@ Only these four queries (plus two title searches to find the Airia family) were 
 | 10 | US9367570B1 | Ad hoc queryable JSON with audit trails | Google | Expired | claim 1 | JSON stored and merged | Requires audit records per user and operational transformation to merge two users' JSON; our `merge` mode is a one-shot object merge into a file, with no audit records or transformation | clear |
 | 11 | EP3211853A1 | Real-time validation of JSON data applying tree graph properties | Mitsubishi Electric | Active | claim 1 | JSON validation | Requires a network classifier that reassembles TCP segments of HTTP messages, builds a tree graph and interrupts the connection; we validate a local file by parsing it | clear |
 | 12 | US10169601B2 | Reading and writing to big data storage formats | American Express | Active | claim 1 | Read/write requests for data | Requires a centralised access point, a catalog lookup of variable location and storage format, and generating a query in the target format's syntax; we have no catalog or syntax translation, only direct file operations | clear |
+| 13 | US6658476B1 | Client-server protocol support list for standard request-response protocols | Microsoft | Expired | claim 1 and 2-5 | Server returns the list of protocols it supports (idea 8) | Expired. Also requires a list specific to the requested resource and ordered by server preference, sent in reply to an HTTP OPTIONS-style request; ours is one list per server, in no preference order beyond newest-first, over stdio JSON-RPC | clear |
+| 14 | US20060080676A1 | Support for multiple interface versions | IBM | Expired | claim 1 | Supports a current and earlier interface versions (idea 9) | Expired. Claim requires firing an event with a reference to the call and listeners that process side effects of the current version; we branch on the request's metadata and share no event mechanism | clear |
+| 15 | US20130198790A1 | Accessing service discovery metadata | ETRI | Abandoned | claim 1 and 2-4 | Discovery request/response (idea 8) | Abandoned. Requests a described metadata section from a description provider; ours returns versions and capabilities, with no metadata sections or signing | clear |
+| 16 | US8577914B2 | APIs discovery service | Google | Expired (lapsed; Google's date estimate 2031) | claim 1 and 2-3 | Server returns machine-readable API metadata (idea 8) | Requires searching an API directory of directory entries that link to discovery documents and retrieving the document; we have no directory and return a fixed result | clear |
+| 17 | WO2015051184A1 | Caching content with notification-based invalidation | Akamai | Ceased | claim 1 | Cached content invalidation (idea 10) | Ceased. Requires tokens stored with cached content and a message that a token is invalid; we only send a TTL and scope hint and cache nothing | clear |
+| 18 | US20110282939A1 | Preserving state information in a stateless protocol | Gallup | Abandoned | claim 1 | Stateless server (idea 9) | Abandoned. State carried in URLs with a counter; our stateless mode carries a protocol version in request metadata and keeps no state | clear |
 
 ## Needs review (to the PM)
-None: no `design-around` or `needs-review` verdicts, and no `unread` rows after the second pass on 2026-10-25 (the first pass left rows 7 and 9-12 unread; they are now read and recorded above). US12730883 is not on Google Patents' claims text endpoint, so it was read from the USPTO page images.
+None for either pass: no `design-around` or `needs-review` verdicts, and no `unread` rows after the second pass on 2026-10-25 (the first pass left rows 7 and 9-12 unread; they are now read and recorded above). US12730883 is not on Google Patents' claims text endpoint, so it was read from the USPTO page images.
 
 ## Limitations
 AI-assisted search with only four queries on one source; relevance ranking is the search engine's. Patent coverage outside Google Patents, non-English literature and unpublished applications are not covered. Claim text is machine-converted from Google Patents; status and expiry dates are Google's estimates, not the official record. The ideas were written by the lane that owns the project, and a different list could find different hits.
