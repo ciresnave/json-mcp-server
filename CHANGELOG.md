@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.3
+
+### Changed
+- Committed binaries are no longer tracked: `dist/` (a Windows zip and exe), `packages/chocolatey/tools/json-mcp-server.exe` and `packages/json-mcp-server.0.1.16.nupkg` (about 8.6 MB, built by hand from 0.1.16; they stay in git history). They are git-ignored; releases carry the binaries. The Chocolatey package test now copies the binary the run built or downloaded into the package. CI only; not published to crates.io (the package `include` list never shipped them).
+
 ## 0.3.2
 
 ### Changed
