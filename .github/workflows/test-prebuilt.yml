@@ -143,6 +143,8 @@ jobs:
           # Copy the contents of chocolatey package to test directory
           New-Item -ItemType Directory -Path "test-choco-package" -Force | Out-Null
           Copy-Item -Recurse "packages/chocolatey/*" "test-choco-package/" -Force
+          # The binary is not committed: take the one this run built or downloaded.
+          Copy-Item "target/x86_64-pc-windows-msvc/release/json-mcp-server.exe" "test-choco-package/tools/" -Force
         } else {
           Write-Host "Creating Chocolatey package for testing"
           .\test-chocolatey-local.ps1

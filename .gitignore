@@ -27,3 +27,8 @@ dist-temp/
 # Backup files
 *.bak
 *.backup
+
+# Local build outputs (build-all-local.ps1); releases carry the binaries
+/dist/
+*.nupkg
+/packages/chocolatey/tools/*.exe
