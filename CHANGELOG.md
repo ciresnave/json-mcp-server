@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.4
+
+### Changed
+- HANDOFF.md rewritten for the scale-to-zero stop. Docs only; not published to crates.io.
+
 ## 0.3.3
 
 ### Changed
