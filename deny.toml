@@ -4,6 +4,9 @@ all-features = true
 
 [advisories]
 version = 2
+ignore = [
+    { id = "RUSTSEC-2026-0543", reason = "chrono unmaintained, no patched version; direct dependency. Dated ignore aligned with auth-framework main #499: re-review by 2026-12-17." },
+]
 
 [licenses]
 version = 2

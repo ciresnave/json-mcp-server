@@ -93,7 +93,7 @@ Use 'json-help' with specific topics for detailed guidance:
                 r#"# Reading JSON Files
 
 ## json-read Tool
-Reads and parses JSON files with automatic streaming for large files.
+Reads JSON files. A top-level array is read element by element and reading stops at `limit` (the rest of the file is then not read or validated); line-delimited JSON is read record by record; any other single JSON document is parsed whole.
 
 **Parameters:**
 - `file_path` (required): Path to JSON file
@@ -122,7 +122,7 @@ Reads and parses JSON files with automatic streaming for large files.
 ```
 
 **Use Cases:**
-- Load entire JSON files (automatically streams if large)
+- Read a JSON file (arrays and line-delimited files are streamed; a single large object is parsed whole)
 - Extract specific fields or arrays
 - Read configuration files
 - Parse API responses stored as JSON
@@ -222,11 +222,10 @@ Execute complex JSONPath queries on JSON files.
 The json-read tool reads line-delimited JSON (one object per line) record by record, so large `.jsonl` files are not loaded whole. A top-level array is read element by element and reading stops at `limit`; any other single large JSON document is parsed in full.
 
 **Streaming Features:**
-- Automatically detects when to use streaming mode
-- Line-delimited JSON files larger than available RAM
-- Fast queries on massive datasets  
-- Memory-efficient processing
-- Progressive results for interactive use
+- Top-level arrays: read element by element, stopping at `limit`
+- Line-delimited JSON (one JSON value per line): read record by record
+- A single large object, or a JSONPath over a whole document, is parsed whole
+- Memory use has not been measured
 
 **Parameters for Large Files:**
 - `file_path` (required): Path to large JSON file
@@ -286,7 +285,7 @@ The json-read tool reads line-delimited JSON (one object per line) record by rec
 
 ## Example 3: Large File Processing
 ```json
-// Read large log file with automatic streaming
+// Read a large log file (line-delimited records are streamed)
 {"name": "json-read", "arguments": {
   "file_path": "./logs.json",
   "query": "$.logs[?(@.level == 'ERROR')]",
@@ -317,7 +316,7 @@ The json-read tool reads line-delimited JSON (one object per line) record by rec
                 r#"# Individual Tool Help
 
 ## json-read
-**Purpose**: Read and parse JSON files with automatic streaming
+**Purpose**: Read JSON files (top-level arrays and line-delimited files are streamed)
 **Required**: `file_path`
 **Optional**: `query`, `limit`, `offset`
 **Example**: `{"file_path": "./data.json", "query": "$.users"}`
