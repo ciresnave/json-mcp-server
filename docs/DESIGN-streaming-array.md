@@ -14,7 +14,7 @@ Status: proposal, 2026-11-20. Not implemented.
 1. Top-level array: drive `serde_json::Deserializer::from_reader(BufReader)` with a custom
    `Visitor::visit_seq` that deserializes ONE element at a time into `Value`, applies
    offset/limit/query, drops the element, and stops once `limit` results are collected.
-   Peak memory = largest single element + results. No new dependency.
+   Memory is expected to track the largest element plus results (unmeasured). No new dependency.
 2. Early stop leaves the file tail unvalidated; the result text says "stopped at limit; rest of file
    not read" so a truncated/invalid tail is not claimed valid (`json-validate` stays the full check).
 3. NDJSON: detect by "top level is not `[`" and a second value follows (`StreamDeserializer`),

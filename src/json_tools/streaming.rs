@@ -18,7 +18,7 @@ impl JsonStreaming {
     fn create_stream_read_tool() -> Tool {
         Tool {
             name: "json-read".to_string(),
-            description: "Read and query JSON files efficiently. A top-level array or line-delimited file is streamed (memory bounded by the largest element); a single large object is parsed whole. Optional JSONPath filter applies per element.".to_string(),
+            description: "Read and query JSON files efficiently. A top-level array or line-delimited file is streamed element by element and reading stops at `limit`; a single large object is parsed whole. Optional JSONPath filter applies per element.".to_string(),
             input_schema: json!({
                 "type": "object",
                 "properties": {
