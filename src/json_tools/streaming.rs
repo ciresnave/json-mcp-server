@@ -18,7 +18,7 @@ impl JsonStreaming {
     fn create_stream_read_tool() -> Tool {
         Tool {
             name: "json-read".to_string(),
-            description: "Read and query JSON files efficiently. Supports files of any size through automatic streaming, with optional JSONPath filtering for data extraction.".to_string(),
+            description: "Read and query JSON files efficiently. A top-level array or line-delimited file is streamed element by element and reading stops at `limit`; a single large object is parsed whole. Optional JSONPath filter applies per element.".to_string(),
             input_schema: json!({
                 "type": "object",
                 "properties": {
@@ -64,12 +64,17 @@ impl JsonStreaming {
         let offset = args.get("offset").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
 
         // Try to stream the file
-        let results = self.stream_json_file(file_path, query, limit, offset)?;
+        let (results, stopped_at_limit) = self.stream_json_file(file_path, query, limit, offset)?;
 
         let output = serde_json::to_string_pretty(&results)?;
 
+        let note = if stopped_at_limit {
+            "\nNote: stopped at the limit; the rest of the file was not read or validated.\n"
+        } else {
+            ""
+        };
         Ok(ToolResult::success(format!(
-            "Streamed {} results from '{}' (offset: {}, limit: {}):\n\n{}",
+            "Streamed {} results from '{}' (offset: {}, limit: {}):{}\n\n{}",
             match &results {
                 Value::Array(arr) => arr.len(),
                 _ => 1,
@@ -77,6 +82,7 @@ impl JsonStreaming {
             file_path,
             offset,
             limit,
+            note,
             output
         )))
     }
@@ -87,34 +93,59 @@ impl JsonStreaming {
         query: Option<&str>,
         limit: usize,
         offset: usize,
-    ) -> anyhow::Result<Value> {
+    ) -> anyhow::Result<(Value, bool)> {
         let file = File::open(file_path)
             .map_err(|e| anyhow::anyhow!("Failed to open file '{}': {}", file_path, e))?;
 
-        let reader = BufReader::new(file);
+        let mut peek = BufReader::new(file);
         let mut results = Vec::new();
         let mut current_offset = 0;
         let mut found_results = 0;
 
-        // Try to detect if this is a line-delimited JSON file
-        let mut lines = reader.lines();
-        let mut is_line_delimited = false;
+        // A top-level array is recognised first, from its first byte, so no physical line is
+        // ever buffered for it (a compact array may be a single huge line).
+        if first_json_ws_skipped_byte(&mut peek)? == Some(b'[') {
+            let mut de = serde_json::Deserializer::from_reader(peek);
+            let mut collected = Vec::new();
+            let collector = ArrayCollector {
+                query,
+                offset,
+                limit,
+                out: &mut collected,
+            };
+            let parsed = serde::Deserializer::deserialize_seq(&mut de, collector);
+            let stopped_at_limit = collected.len() >= limit;
+            match parsed {
+                // Reached the end of the array before `limit`: the rest must be valid JSON
+                // (nothing but whitespace after the closing bracket).
+                Ok(()) if !stopped_at_limit => de.end()?,
+                Ok(()) => {}
+                // Stopping at `limit` leaves the array unclosed, which serde_json reports as
+                // an error; that is expected, so only a failure before the limit is real.
+                Err(e) if !stopped_at_limit => return Err(e.into()),
+                Err(_) => {}
+            }
+            return Ok((Value::Array(collected), stopped_at_limit));
+        }
 
-        // Read first few lines to detect format
-        let mut first_lines = Vec::new();
-        for _ in 0..5 {
-            if let Some(Ok(line)) = lines.next() {
-                let line_clone = line.clone();
-                first_lines.push(line);
-                if line_clone.trim().starts_with('{')
-                    && line_clone.trim().ends_with('}')
-                    && serde_json::from_str::<Value>(&line_clone).is_ok()
-                {
+        // Not an array: line-delimited JSON when the first two non-empty lines are each a
+        // complete JSON value (any type); otherwise one JSON document.
+        let mut is_line_delimited = false;
+        {
+            let mut seen = 0;
+            for line in BufReader::new(File::open(file_path)?).lines().take(20) {
+                let line = line?;
+                if line.trim().is_empty() {
+                    continue;
+                }
+                if serde_json::from_str::<Value>(&line).is_err() {
+                    break;
+                }
+                seen += 1;
+                if seen == 2 {
                     is_line_delimited = true;
                     break;
                 }
-            } else {
-                break;
             }
         }
 
@@ -157,38 +188,10 @@ impl JsonStreaming {
                 current_offset += 1;
             }
         } else {
-            // Try to parse as regular JSON file and stream through it
             let content = std::fs::read_to_string(file_path)?;
             let json_value: Value = serde_json::from_str(&content)?;
 
-            // If it's an array, we can stream through elements
-            if let Value::Array(arr) = json_value {
-                for item in arr.iter() {
-                    if current_offset < offset {
-                        current_offset += 1;
-                        continue;
-                    }
-
-                    if found_results >= limit {
-                        break;
-                    }
-
-                    let should_include = if let Some(query_str) = query {
-                        match item.query(query_str) {
-                            Ok(results) => !results.is_empty(),
-                            Err(_) => false,
-                        }
-                    } else {
-                        true
-                    };
-
-                    if should_include {
-                        results.push(item.clone());
-                        found_results += 1;
-                    }
-                    current_offset += 1;
-                }
-            } else {
+            {
                 // Single object - apply query if provided
                 let should_include = if let Some(query_str) = query {
                     match json_value.query(query_str) {
@@ -205,7 +208,64 @@ impl JsonStreaming {
             }
         }
 
-        Ok(Value::Array(results))
+        Ok((Value::Array(results), false))
+    }
+}
+
+/// Returns the first byte that is not JSON whitespace (space, tab, CR, LF) without consuming it.
+fn first_json_ws_skipped_byte<R: BufRead>(r: &mut R) -> std::io::Result<Option<u8>> {
+    loop {
+        let buf = r.fill_buf()?;
+        if buf.is_empty() {
+            return Ok(None);
+        }
+        match buf
+            .iter()
+            .position(|b| !matches!(b, b' ' | b'\t' | b'\r' | b'\n'))
+        {
+            Some(i) => return Ok(Some(buf[i])),
+            None => {
+                let n = buf.len();
+                r.consume(n);
+            }
+        }
+    }
+}
+
+/// Visits a top-level JSON array one element at a time, applying offset, limit and an
+/// optional JSONPath filter. Stops reading once `limit` results are collected, so the
+/// rest of the file is neither read nor validated.
+struct ArrayCollector<'a> {
+    query: Option<&'a str>,
+    offset: usize,
+    limit: usize,
+    out: &'a mut Vec<Value>,
+}
+
+impl<'de> serde::de::Visitor<'de> for ArrayCollector<'_> {
+    type Value = ();
+
+    fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        f.write_str("a JSON array")
+    }
+
+    fn visit_seq<A: serde::de::SeqAccess<'de>>(self, mut seq: A) -> Result<(), A::Error> {
+        let mut index = 0usize;
+        while self.out.len() < self.limit {
+            let Some(item) = seq.next_element::<Value>()? else {
+                break;
+            };
+            let keep = index >= self.offset
+                && match self.query {
+                    Some(q) => item.query(q).map(|r| !r.is_empty()).unwrap_or(false),
+                    None => true,
+                };
+            index += 1;
+            if keep {
+                self.out.push(item);
+            }
+        }
+        Ok(())
     }
 }
 

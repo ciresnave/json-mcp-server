@@ -664,3 +664,162 @@ async fn test_unknown_tool_is_a_protocol_error() {
             .contains("Unknown tool: nope")
     );
 }
+
+/// json-read on a top-level array must stop at `limit` without reading the rest of the file.
+/// Red on the whole-file parser (the garbage tail fails the parse); green when streaming.
+#[tokio::test]
+async fn test_json_read_array_stops_at_limit_without_reading_tail() {
+    let env = TestEnvironment::new();
+    let handler = JsonToolsHandler::new();
+    let mut body = String::from("[");
+    for i in 0..100 {
+        body.push_str(&format!("{{\"id\":{i}}},"));
+    }
+    body.push_str("THIS TAIL IS NOT JSON");
+    let path = env.create_json_file("tail.json", &body);
+
+    let args = create_args(&[
+        ("file_path", json!(path.to_string_lossy())),
+        ("limit", json!(5)),
+        ("offset", json!(2)),
+    ]);
+    let out = call_tool(&handler, "json-read", args).await.unwrap();
+    assert!(
+        out.contains("\"id\": 2") && out.contains("\"id\": 6"),
+        "{out}"
+    );
+    assert!(!out.contains("\"id\": 7"), "{out}");
+}
+
+/// A malformed array that is read to its end (limit not reached) is still an error.
+#[tokio::test]
+async fn test_json_read_array_malformed_before_limit_errors() {
+    let env = TestEnvironment::new();
+    let handler = JsonToolsHandler::new();
+    let path = env.create_json_file("bad.json", "[{\"id\":1},{\"id\":2},oops]");
+    let args = create_args(&[
+        ("file_path", json!(path.to_string_lossy())),
+        ("limit", json!(10)),
+    ]);
+    let res = call_tool(&handler, "json-read", args).await;
+    assert!(res.is_err() || res.unwrap().to_lowercase().contains("error"));
+}
+
+/// Query filtering, offset and limit over a streamed array (the query runs per element; offset counts source elements).
+#[tokio::test]
+async fn test_json_read_array_query_offset_limit() {
+    let env = TestEnvironment::new();
+    let handler = JsonToolsHandler::new();
+    let items: Vec<Value> = (0..50)
+        .map(|i| {
+            if i % 2 == 0 {
+                json!({"id": i, "tag": "e"})
+            } else {
+                json!({"id": i})
+            }
+        })
+        .collect();
+    let path = env.create_json_file("items.json", &serde_json::to_string(&items).unwrap());
+    let args = create_args(&[
+        ("file_path", json!(path.to_string_lossy())),
+        ("query", json!("$.tag")),
+        ("offset", json!(10)),
+        ("limit", json!(3)),
+    ]);
+    let out = call_tool(&handler, "json-read", args).await.unwrap();
+    assert!(
+        out.contains("\"id\": 10") && out.contains("\"id\": 12") && out.contains("\"id\": 14"),
+        "{out}"
+    );
+    assert!(!out.contains("\"id\": 16"), "{out}");
+}
+
+async fn read_with(
+    handler: &JsonToolsHandler,
+    path: &std::path::Path,
+    extra: &[(&str, Value)],
+) -> Result<String, String> {
+    let mut pairs = vec![("file_path", json!(path.to_string_lossy()))];
+    pairs.extend(extra.iter().cloned());
+    call_tool(handler, "json-read", create_args(&pairs)).await
+}
+
+/// Pretty-printed array whose element lines look like standalone objects: still an array.
+#[tokio::test]
+async fn test_json_read_pretty_array_offset_is_by_element() {
+    let env = TestEnvironment::new();
+    let handler = JsonToolsHandler::new();
+    let path = env.create_json_file(
+        "pretty.json",
+        "[\n{\"id\": 0},\n{\"id\": 1},\n{\"id\": 2},\n{\"id\": 3}\n]\n",
+    );
+    let out = read_with(
+        &handler,
+        &path,
+        &[("offset", json!(1)), ("limit", json!(2))],
+    )
+    .await
+    .unwrap();
+    assert!(
+        out.contains("\"id\": 1") && out.contains("\"id\": 2"),
+        "{out}"
+    );
+    assert!(
+        !out.contains("\"id\": 0") && !out.contains("\"id\": 3"),
+        "{out}"
+    );
+}
+
+/// Compact one-line array works and a limit stop is disclosed.
+#[tokio::test]
+async fn test_json_read_compact_array_and_truncation_notice() {
+    let env = TestEnvironment::new();
+    let handler = JsonToolsHandler::new();
+    let path = env.create_json_file("compact.json", "[{\"id\":0},{\"id\":1},{\"id\":2}]");
+    let cut = read_with(&handler, &path, &[("limit", json!(2))])
+        .await
+        .unwrap();
+    assert!(cut.contains("stopped at the limit"), "{cut}");
+    let full = read_with(&handler, &path, &[("limit", json!(10))])
+        .await
+        .unwrap();
+    assert!(
+        !full.contains("stopped at the limit") && full.contains("\"id\": 2"),
+        "{full}"
+    );
+}
+
+/// Content after the closing bracket is an error when the array was read to its end.
+#[tokio::test]
+async fn test_json_read_array_trailing_garbage_errors() {
+    let env = TestEnvironment::new();
+    let handler = JsonToolsHandler::new();
+    let path = env.create_json_file("trail.json", "[{\"id\":1}] garbage");
+    let res = read_with(&handler, &path, &[("limit", json!(10))]).await;
+    assert!(res.is_err() || res.unwrap().to_lowercase().contains("error"));
+}
+
+/// Vertical tab / form feed are not JSON whitespace.
+#[tokio::test]
+async fn test_json_read_array_rejects_non_json_whitespace() {
+    let env = TestEnvironment::new();
+    let handler = JsonToolsHandler::new();
+    let path = env.create_json_file("vt.json", "\u{b}[{\"id\":1}]");
+    let res = read_with(&handler, &path, &[("limit", json!(10))]).await;
+    assert!(res.is_err() || res.unwrap().to_lowercase().contains("error"));
+}
+
+/// Line-delimited records of any JSON type (here numbers and arrays) are streamed.
+#[tokio::test]
+async fn test_json_read_line_delimited_scalars_and_arrays() {
+    let env = TestEnvironment::new();
+    let handler = JsonToolsHandler::new();
+    let path = env.create_json_file("lines.jsonl", "1\n[2,3]\n\"four\"\n");
+    let out = read_with(&handler, &path, &[("limit", json!(10))])
+        .await
+        .unwrap();
+    assert!(
+        out.contains("Streamed 3 results") && out.contains("\"four\""),
+        "{out}"
+    );
+}

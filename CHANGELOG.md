@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.5
+
+### Fixed
+- `json-read` on a top-level JSON array now streams one element at a time and stops at `limit`; before, the whole file was parsed and every result cloned. No memory figure is claimed (not measured). The tool description, help text and README no longer claim streaming "of any size" for a single large object. Tests: `test_json_read_array_*` in `tests/integration_tests.rs` (the tail test fails on the old parser). The array is recognised before the line-delimited heuristic (compact one-line and pretty-printed arrays), content after its closing bracket is an error, only JSON whitespace is skipped, line-delimited records may be any JSON value, and a stop at `limit` is disclosed in the result.
+
+### Changed
+- `cargo update -p rustix` to 1.1.6 (RUSTSEC-2026-0486; lockfile only, dev-dependency via tempfile). `deny.toml` carries a dated ignore for chrono RUSTSEC-2026-0543 (unmaintained, no patch), re-review by 2026-12-17.
+
 ## 0.3.4
 
 ### Changed

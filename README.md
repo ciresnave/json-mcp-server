@@ -14,7 +14,7 @@ A high-performance Rust-based Model Context Protocol (MCP) server that provides 
 
 ### Key Capabilities
 
-- **Large File Support**: Pagination for any JSON file; line-by-line streaming for line-delimited JSON (a single large JSON document is parsed whole)
+- **Large File Support**: Pagination for any JSON file; a top-level array is streamed element by element and stops at `limit`; line-delimited JSON is streamed line by line; a single large object or JSONPath over a whole document is parsed whole
 - **JSONPath Querying**: Full JSONPath support for complex data extraction and filtering
 - **Flexible Writing**: Three modes (replace, merge, append)
 - **LLM-Optimized**: Detailed error messages and usage examples for optimal LLM interaction
@@ -258,8 +258,8 @@ $.products[?(@.category == 'electronics' && @.price < 500)].name
 ## Performance Notes
 
 ### Large File Handling
-- Line-delimited JSON: detected from the first lines of the file and read record by record, so memory stays small regardless of file size
-- A single large JSON document is parsed whole before paging, so memory grows with file size
+- Line-delimited JSON: detected from the first lines of the file and read record by record
+- A top-level JSON array is read element by element and reading stops at `limit` (memory not measured); any other single large JSON document is parsed whole before paging
 
 ### Best Practices
 - Use specific JSONPath queries to filter data early
