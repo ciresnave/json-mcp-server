@@ -163,7 +163,12 @@ impl JsonStreaming {
             if first_non_ws_byte(&mut peek)? == Some(b'[') {
                 let mut de = serde_json::Deserializer::from_reader(peek);
                 let mut collected = Vec::new();
-                let collector = ArrayCollector { query, offset, limit, out: &mut collected };
+                let collector = ArrayCollector {
+                    query,
+                    offset,
+                    limit,
+                    out: &mut collected,
+                };
                 let parsed = serde::Deserializer::deserialize_seq(&mut de, collector);
                 // Stopping at `limit` leaves the array unclosed, which serde_json reports as an
                 // error; that is expected, so only a failure before the limit is real.

@@ -684,7 +684,10 @@ async fn test_json_read_array_stops_at_limit_without_reading_tail() {
         ("offset", json!(2)),
     ]);
     let out = call_tool(&handler, "json-read", args).await.unwrap();
-    assert!(out.contains("\"id\": 2") && out.contains("\"id\": 6"), "{out}");
+    assert!(
+        out.contains("\"id\": 2") && out.contains("\"id\": 6"),
+        "{out}"
+    );
     assert!(!out.contains("\"id\": 7"), "{out}");
 }
 
@@ -707,7 +710,15 @@ async fn test_json_read_array_malformed_before_limit_errors() {
 async fn test_json_read_array_query_offset_limit() {
     let env = TestEnvironment::new();
     let handler = JsonToolsHandler::new();
-    let items: Vec<Value> = (0..50).map(|i| if i % 2 == 0 { json!({"id": i, "tag": "e"}) } else { json!({"id": i}) }).collect();
+    let items: Vec<Value> = (0..50)
+        .map(|i| {
+            if i % 2 == 0 {
+                json!({"id": i, "tag": "e"})
+            } else {
+                json!({"id": i})
+            }
+        })
+        .collect();
     let path = env.create_json_file("items.json", &serde_json::to_string(&items).unwrap());
     let args = create_args(&[
         ("file_path", json!(path.to_string_lossy())),
@@ -716,6 +727,9 @@ async fn test_json_read_array_query_offset_limit() {
         ("limit", json!(3)),
     ]);
     let out = call_tool(&handler, "json-read", args).await.unwrap();
-    assert!(out.contains("\"id\": 10") && out.contains("\"id\": 12") && out.contains("\"id\": 14"), "{out}");
+    assert!(
+        out.contains("\"id\": 10") && out.contains("\"id\": 12") && out.contains("\"id\": 14"),
+        "{out}"
+    );
     assert!(!out.contains("\"id\": 16"), "{out}");
 }
