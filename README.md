@@ -258,8 +258,8 @@ $.products[?(@.category == 'electronics' && @.price < 500)].name
 ## Performance Notes
 
 ### Large File Handling
-- Line-delimited JSON: detected from the first lines of the file and read record by record, so memory stays small regardless of file size
-- A single large JSON document is parsed whole before paging, so memory grows with file size
+- Line-delimited JSON: detected from the first lines of the file and read record by record
+- A top-level JSON array is read element by element and reading stops at `limit` (memory not measured); any other single large JSON document is parsed whole before paging
 
 ### Best Practices
 - Use specific JSONPath queries to filter data early

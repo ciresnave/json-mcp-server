@@ -158,7 +158,7 @@ impl JsonStreaming {
             }
         } else {
             // Not line-delimited. A top-level array is streamed one element at a time
-            // (peak memory: the largest element plus the results), stopping at `limit`.
+            // stopping at `limit`.
             let mut peek = BufReader::new(File::open(file_path)?);
             if first_non_ws_byte(&mut peek)? == Some(b'[') {
                 let mut de = serde_json::Deserializer::from_reader(peek);

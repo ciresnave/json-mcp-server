@@ -5,7 +5,7 @@ Status: proposal, 2026-11-20. Not implemented.
 ## Problem (read from `src/json_tools/streaming.rs` at origin/main 3356f85)
 `json-read` is described as "files of any size through automatic streaming", but:
 - A non-line-delimited file goes through `read_to_string` + `serde_json::from_str::<Value>` and
-  then `item.clone()` per result: memory is ~file size x2-3 whatever `limit` is.
+  then `item.clone()` per result: the whole file is held in memory whatever `limit` is (not measured).
 - Line-delimited detection looks only at the first 5 lines and only for `{...}` lines; an NDJSON
   file of arrays/scalars falls to the whole-file path and fails to parse.
 - In NDJSON mode a malformed line is silently skipped (not counted, not reported).
@@ -24,7 +24,7 @@ Status: proposal, 2026-11-20. Not implemented.
    tunable) instead of a silent OOM.
 
 ## Tests (each names the claim it backs)
-- 1M-element array, limit=10: peak RSS bounded (measured, not asserted from the code).
+- 1M-element array, limit=10: peak RSS old vs new, same clock (to be measured before any memory claim).
 - offset/limit/query parity with the current output on small fixtures (golden comparison).
 - NDJSON of arrays/scalars; malformed-line count reported; truncated tail after limit accepted.
 

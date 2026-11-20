@@ -219,7 +219,7 @@ Execute complex JSONPath queries on JSON files.
                 r#"# Streaming Large JSON Files
 
 ## json-read Tool (Automatic Streaming)
-The json-read tool reads line-delimited JSON (one object per line) record by record, so large `.jsonl` files are not loaded whole. A single large JSON document is parsed in full before its elements are paged, so it needs memory proportional to the file.
+The json-read tool reads line-delimited JSON (one object per line) record by record, so large `.jsonl` files are not loaded whole. A top-level array is read element by element and reading stops at `limit`; any other single large JSON document is parsed in full.
 
 **Streaming Features:**
 - Automatically detects when to use streaming mode
