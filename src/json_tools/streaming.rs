@@ -18,7 +18,7 @@ impl JsonStreaming {
     fn create_stream_read_tool() -> Tool {
         Tool {
             name: "json-read".to_string(),
-            description: "Read and query JSON files efficiently. Supports files of any size through automatic streaming, with optional JSONPath filtering for data extraction.".to_string(),
+            description: "Read and query JSON files efficiently. A top-level array or line-delimited file is streamed (memory bounded by the largest element); a single large object is parsed whole. Optional JSONPath filter applies per element.".to_string(),
             input_schema: json!({
                 "type": "object",
                 "properties": {
@@ -157,38 +157,27 @@ impl JsonStreaming {
                 current_offset += 1;
             }
         } else {
-            // Try to parse as regular JSON file and stream through it
+            // Not line-delimited. A top-level array is streamed one element at a time
+            // (peak memory: the largest element plus the results), stopping at `limit`.
+            let mut peek = BufReader::new(File::open(file_path)?);
+            if first_non_ws_byte(&mut peek)? == Some(b'[') {
+                let mut de = serde_json::Deserializer::from_reader(peek);
+                let mut collected = Vec::new();
+                let collector = ArrayCollector { query, offset, limit, out: &mut collected };
+                let parsed = serde::Deserializer::deserialize_seq(&mut de, collector);
+                // Stopping at `limit` leaves the array unclosed, which serde_json reports as an
+                // error; that is expected, so only a failure before the limit is real.
+                if let Err(e) = parsed
+                    && collected.len() < limit
+                {
+                    return Err(e.into());
+                }
+                return Ok(Value::Array(collected));
+            }
             let content = std::fs::read_to_string(file_path)?;
             let json_value: Value = serde_json::from_str(&content)?;
 
-            // If it's an array, we can stream through elements
-            if let Value::Array(arr) = json_value {
-                for item in arr.iter() {
-                    if current_offset < offset {
-                        current_offset += 1;
-                        continue;
-                    }
-
-                    if found_results >= limit {
-                        break;
-                    }
-
-                    let should_include = if let Some(query_str) = query {
-                        match item.query(query_str) {
-                            Ok(results) => !results.is_empty(),
-                            Err(_) => false,
-                        }
-                    } else {
-                        true
-                    };
-
-                    if should_include {
-                        results.push(item.clone());
-                        found_results += 1;
-                    }
-                    current_offset += 1;
-                }
-            } else {
+            {
                 // Single object - apply query if provided
                 let should_include = if let Some(query_str) = query {
                     match json_value.query(query_str) {
@@ -206,6 +195,60 @@ impl JsonStreaming {
         }
 
         Ok(Value::Array(results))
+    }
+}
+
+/// Returns the first non-whitespace byte without consuming it.
+fn first_non_ws_byte<R: BufRead>(r: &mut R) -> std::io::Result<Option<u8>> {
+    loop {
+        let buf = r.fill_buf()?;
+        if buf.is_empty() {
+            return Ok(None);
+        }
+        match buf.iter().position(|b| !b.is_ascii_whitespace()) {
+            Some(i) => return Ok(Some(buf[i])),
+            None => {
+                let n = buf.len();
+                r.consume(n);
+            }
+        }
+    }
+}
+
+/// Visits a top-level JSON array one element at a time, applying offset, limit and an
+/// optional JSONPath filter. Stops reading once `limit` results are collected, so the
+/// rest of the file is neither read nor validated.
+struct ArrayCollector<'a> {
+    query: Option<&'a str>,
+    offset: usize,
+    limit: usize,
+    out: &'a mut Vec<Value>,
+}
+
+impl<'de> serde::de::Visitor<'de> for ArrayCollector<'_> {
+    type Value = ();
+
+    fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        f.write_str("a JSON array")
+    }
+
+    fn visit_seq<A: serde::de::SeqAccess<'de>>(self, mut seq: A) -> Result<(), A::Error> {
+        let mut index = 0usize;
+        while self.out.len() < self.limit {
+            let Some(item) = seq.next_element::<Value>()? else {
+                break;
+            };
+            let keep = index >= self.offset
+                && match self.query {
+                    Some(q) => item.query(q).map(|r| !r.is_empty()).unwrap_or(false),
+                    None => true,
+                };
+            index += 1;
+            if keep {
+                self.out.push(item);
+            }
+        }
+        Ok(())
     }
 }
 

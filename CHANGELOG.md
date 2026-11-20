@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased (version allocated by the PM at gate time)
+
+### Fixed
+- `json-read` on a top-level JSON array now streams one element at a time and stops at `limit`; before, the whole file was parsed and cloned (memory about 2-3x file size whatever the limit). The tool description, help text and README no longer claim streaming "of any size" for a single large object. Tests: `test_json_read_array_*` in `tests/integration_tests.rs` (the tail test fails on the old parser).
+
 ## 0.3.4
 
 ### Changed

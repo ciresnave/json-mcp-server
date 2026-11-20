@@ -51,7 +51,7 @@ impl JsonToolsHandler {
 This server provides comprehensive JSON file operations for LLMs. Available tools:
 
 ## Core Tools:
-- **json-read**: Read and parse JSON files of any size with automatic streaming for large files
+- **json-read**: Read JSON files; top-level arrays and line-delimited files are streamed, a single large object is parsed whole
 - **json-write**: Write or update JSON files with various merge strategies  
 - **json-query**: Query JSON files using JSONPath expressions
 - **json-validate**: Validate JSON structure and content
@@ -74,7 +74,7 @@ This server provides comprehensive JSON file operations for LLMs. Available tool
 ```
 
 ## Key Features:
-- Support for extremely large JSON files via automatic streaming
+- Streaming of large top-level arrays and line-delimited files (a single huge object is parsed whole)
 - JSONPath querying for complex data extraction
 - Multiple write/update modes (replace, merge, append)
 - Validation and error handling with detailed diagnostics
