@@ -10,7 +10,7 @@ Rules: ciresnave-bot only, never Opus (`--model sonnet`), short messages, PM all
 - Soft-stopped 2026-11-21 at pm-platform's request (memory for image generation). pm-platform mails after 00:05Z to wake me.
 
 ## Tasks held
-1. **Day PR 2026-11-22 UTC** (one PR per UTC day): push `lane/roadmap-memory`, add the row-8 peak-memory measurement (huge file, old vs new binary, same clock; claim nothing about memory until measured), `cargo fmt --check`, open ONE PR, `[READY]` to pm-assist cc pm-platform. Docs-only, so the PM allocates the version at gate.
+1. **Day PR 2026-11-22 UTC** (one PR per UTC day): push `lane/roadmap-memory` (row-8 measurement already committed, ece1fc7: 0.3.4 ~4955 MB vs 0.3.5 ~6 MB peak, see ROADMAP), `cargo fmt --check`, open ONE PR, `[READY]` to pm-assist cc pm-platform. Docs-only, so the PM allocates the version at gate.
 2. Issues #1 (Cline) and #2 (Gemini CLI): no reply since the 2026-10-25 retest request. PM sweep 2026-11-16: close if silent by 2026-12-07; no early close; #2 never tested by us.
 3. ROADMAP row 7 gaps (pagination, outputSchema, subscriptions): low value, after row 8.
 
