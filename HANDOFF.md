@@ -7,7 +7,9 @@ Rules: ciresnave-bot only, never Opus (`--model sonnet`), short messages, PM all
 - Remote has only `main` (`git ls-remote --heads origin`); no stale lane branches.
 - Branch `lane/roadmap-memory` (worktree `../json-mcp-server-wt-roadmap`): ROADMAP rows 2/3/8 + this HANDOFF, docs only, committed not pushed.
 - rustix RUSTSEC-2026-0486: answered to pm-platform, NOT affected (lock 1.1.6 is patched; dev-dep via tempfile only).
-- Soft-stopped 2026-11-21 at pm-platform's request (memory for image generation). pm-platform mails after 00:05Z to wake me.
+- Soft-stopped again 2026-11-21 (EXPECTATIONS 6.32, no work in flight until the PR window opens 2026-11-22T00Z). pm-platform mails after 00:05Z to wake me; if not mailed, still open the PR after 00:05Z.
+- Row 7 STATUS to pm-platform failed to send (synapsed error x2); recommend declining row 7 gaps, ask which if any.
+- Branch lane/roadmap-memory is at 562c876 (worktree `../json-mcp-server-wt-roadmap`); the primary's HANDOFF.md is this file, uncommitted by design.
 
 ## Tasks held
 1. **Day PR 2026-11-22 UTC** (one PR per UTC day): push `lane/roadmap-memory` (row-8 measurement already committed, ece1fc7: 0.3.4 ~4955 MB vs 0.3.5 ~6 MB peak, see ROADMAP), `cargo fmt --check`, open ONE PR, `[READY]` to pm-assist cc pm-platform. Docs-only, so the PM allocates the version at gate.
