@@ -1,23 +1,27 @@
-# HANDOFF: json-mcp-server lane (rewritten 2026-10-28, ref origin/main after #13)
+# HANDOFF: json-mcp-server lane (rewritten 2026-11-21, ref origin/main b5882b1)
 
-Stopped to zero on 2026-10-28 (CireSnave ruled). Rules: ciresnave-bot only, never Opus (`--model sonnet`), short messages, PM allocates versions, merges and publishes. Do not use `gh auth switch`.
+Rules: ciresnave-bot only, never Opus (`--model sonnet`), short messages, PM allocates versions, merges and publishes. Reports go to cluster PM pm-platform; `[READY]` to pm-assist cc pm-platform. No `gh auth switch`. Sign posts `— lane: json-mcp-server`.
 
 ## State
-- crates.io 0.3.0 (tag v0.3.0): MCP 2026-07-28 dual-era. 0.3.1-0.3.4 are docs/CI only, not published. 0.3.3 untracked the committed binaries (ROADMAP row 6 done).
-- Branch protection: 7 required contexts. Packaging workflows run on push to main/schedule, not required; all green at 0.3.3.
-- Patent sweep `docs/PATENT-SWEEP.md` covers 0.1.x-0.3.x; re-sweep before a release adding a new capability family, and by 2027-10-25.
-- Ant-first (PM notice 2026-10-28): no NEW hand-rolled config, log-redaction or release/packaging scripting without PM ack. ant-fit census sent: nothing here blocks on any Ant.
+- crates.io 0.3.0 (tag v0.3.0, 11 release assets). 0.3.1-0.3.5 unpublished; 0.3.5 (#15, merged 2026-11-20) streams a top-level array in `json-read` and stops at `limit`.
+- Remote has only `main` (`git ls-remote --heads origin`); no stale lane branches.
+- Branch `lane/roadmap-memory` (worktree `../json-mcp-server-wt-roadmap`): ROADMAP rows 2/3/8 + this HANDOFF, docs only, committed not pushed.
+- rustix RUSTSEC-2026-0486: answered to pm-platform, NOT affected (lock 1.1.6 is patched; dev-dep via tempfile only).
+- Soft-stopped again 2026-11-21 (EXPECTATIONS 6.32, no work in flight until the PR window opens 2026-11-22T00Z). pm-platform mails after 00:05Z to wake me; if not mailed, still open the PR after 00:05Z.
+- Row 7 STATUS to pm-platform failed to send (synapsed error x2); recommend declining row 7 gaps, ask which if any.
+- Branch lane/roadmap-memory is at 562c876 (worktree `../json-mcp-server-wt-roadmap`); the primary's HANDOFF.md is this file, uncommitted by design.
 
 ## Tasks held
-1. Issues #1 (CPapadim, Cline) and #2 (dcharkes, Gemini CLI): reporters were asked on 2026-10-25 to retest 0.3.0; no reply as of 2026-10-28. DECIDE BY 2026-11-08: close #1 on confirmation; close #2 only on the reporter's confirmation (Gemini CLI never tested by us); else comment status. `gh issue view N --repo ciresnave/json-mcp-server --comments`. (The PM's scale-to-zero note said "#2/#3"; only #1 and #2 exist.)
-2. ROADMAP row 8 (real streaming of one huge JSON document) and row 7 gaps (pagination, outputSchema, subscriptions): ideas only, wait for PM direction.
+1. **Day PR 2026-11-22 UTC** (one PR per UTC day): push `lane/roadmap-memory` (row-8 measurement already committed, ece1fc7: 0.3.4 ~4955 MB vs 0.3.5 ~6 MB peak, see ROADMAP), `cargo fmt --check`, open ONE PR, `[READY]` to pm-assist cc pm-platform. Docs-only, so the PM allocates the version at gate.
+2. Issues #1 (Cline) and #2 (Gemini CLI): no reply since the 2026-10-25 retest request. PM sweep 2026-11-16: close if silent by 2026-12-07; no early close; #2 never tested by us.
+3. ROADMAP row 7 gaps (pagination, outputSchema, subscriptions): low value, after row 8.
 
-## What wakes me
-Mail from the PM; a reporter reply on #1/#2; the 2026-11-08 issue deadline; a release/patent-sweep need.
+WAIT: issue-1-reporter-retest | check: gh issue view 1 --repo ciresnave/json-mcp-server --comments | wake: 2026-12-07T00:00:00Z
+WAIT: issue-2-reporter-retest | check: gh issue view 2 --repo ciresnave/json-mcp-server --comments | wake: 2026-12-07T00:00:00Z
 
 ## Gotchas
-- Primary checkout stays on main; other work in `git worktree add ../json-mcp-server-wt-<topic>`. Untracked `supertool` is not ours.
-- `cargo package --list` ~33 files. `CARGO_BUILD_JOBS=2`, one cargo at a time; long runs use run_in_background.
-- Every pushed change bumps the version + CHANGELOG line. Scripted edits must be idempotent; re-read diffs.
-- `MSYS_NO_PATHCONV=1` for `git show origin/main:path`. `release.yml` workflow_dispatch can't pass its archive step.
-- Patent claims: `python C:\Projects\tools\patent-claims.py <number>`.
+- Primary checkout stays on main; other work in worktrees. Untracked `supertool` is not ours.
+- Python edits via heredoc: quoted `<<'PYEOF'` and raw strings for `\t`/`\n` in Rust source.
+- `CARGO_BUILD_JOBS=2`, one cargo at a time. `cargo fmt --check` before every push.
+- Patent sweep `docs/PATENT-SWEEP.md`; re-sweep before a release adding a capability family, by 2027-10-25.
+- `MSYS_NO_PATHCONV=1` for `git show origin/main:path`. `git fetch --prune` before trusting `origin/*` branch lists.

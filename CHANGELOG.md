@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.6
+
+### Changed
+- `LICENSE-APACHE` replaced with the canonical Apache-2.0 text (11358 bytes, sha256 cfc7749b; licence text only, no scope change); `ROADMAP.md` and `HANDOFF.md` updated. Allocated by pm-assist 2026-11-23.
+
 ## 0.3.5
 
 ### Fixed
