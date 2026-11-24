@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.3.7\n\n### Changed\n- CI only: the CodeRipper portfolio pin moves from 33bd929 to dc45e36 (portfolio rollout wave). Allocated by pm-assist.
+
 ## 0.3.6
 
 ### Changed
