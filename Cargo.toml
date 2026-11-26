@@ -1,6 +1,6 @@
 [package]
 name = "json-mcp-server"
-version = "0.3.7"
+version = "0.3.8"
 edition = "2024"
 description = "A high-performance Model Context Protocol (MCP) server for comprehensive JSON file operations optimized for LLM interactions"
 authors = ["Eric Evans <CireSnave@gmail.com>"]
@@ -18,13 +18,11 @@ rust-version = "1.89"
 tokio = { version = "1.54", features = ["full"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = { version = "1.0.154", features = ["preserve_order"] }
-anyhow = "1.0.104"
-clap = { version = "4.6", features = ["derive"] }
-jsonpath-rust = "1.0.12"
+anyhow = "1.0.105"
+clap = { version = "4.6.10", features = ["derive"] }
+jsonpath-rust = "1.0.13"
 async-trait = "0.1.92"
-uuid = { version = "1.29", features = ["v4"] }
 tracing = "0.1.44"
-tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 chrono = { version = "0.4.45", features = ["serde"] }
 
 [dev-dependencies]

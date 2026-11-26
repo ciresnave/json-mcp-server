@@ -91,7 +91,8 @@ jobs:
       shell: bash
       run: |
         # Ensure Rust is in PATH
-        source ~/.cargo/env 2>/dev/null || true
+        # macOS runners (Homebrew rustup) have no ~/.cargo/env; sourcing a missing file ends the step
+        if [ -f "$HOME/.cargo/env" ]; then . "$HOME/.cargo/env"; fi
         cargo build --locked --release --target ${{ matrix.target }}
     
     - name: Upload test binary

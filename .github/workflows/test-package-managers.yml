@@ -145,7 +145,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-14, macos-15]
+        os: [macos-15]
     
     steps:
     - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -265,7 +265,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-22.04, ubuntu-24.04, windows-2022, windows-2025, macos-14, macos-15]
+        os: [ubuntu-22.04, ubuntu-24.04, windows-2022, windows-2025, macos-15]
         method: [cargo]  # Only test cargo for now since we don't have releases yet
     
     steps:
@@ -316,7 +316,8 @@ jobs:
         fi
         
         # Always source the environment to be safe
-        source ~/.cargo/env 2>/dev/null || true
+        # macOS runners (Homebrew rustup) have no ~/.cargo/env; sourcing a missing file ends the step
+        if [ -f "$HOME/.cargo/env" ]; then . "$HOME/.cargo/env"; fi
         
         # Show versions for debugging
         echo "📊 Rust version info:"

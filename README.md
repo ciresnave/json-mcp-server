@@ -1,6 +1,8 @@
 # JSON MCP Server
 
-A high-performance Rust-based Model Context Protocol (MCP) server that provides comprehensive JSON file operations optimized for LLM interactions. This server enables LLMs to efficiently read, write, query, and manipulate JSON files with support for extremely large datasets and advanced querying capabilities.
+A high-performance Rust-based Model Context Protocol (MCP) server that provides comprehensive JSON file operations optimized for LLM interactions. This server enables LLMs to efficiently read, write, query, and manipulate JSON files with JSONPath querying and paged reads; a top-level array in a large file is streamed rather than loaded whole.
+
+- MCP Registry name: `mcp-name: io.github.ciresnave/json-mcp-server`
 
 ## 🚀 Features
 
@@ -19,7 +21,7 @@ A high-performance Rust-based Model Context Protocol (MCP) server that provides 
 - **Flexible Writing**: Three modes (replace, merge, append)
 - **LLM-Optimized**: Detailed error messages and usage examples for optimal LLM interaction
 - **Bounded Output**: Pagination (`limit`/`offset`) keeps each response small
-- **MCP Compliant**: Full Model Context Protocol support with proper error handling
+- **MCP**: tools-only server over stdio; speaks MCP revision 2026-07-28 (stateless, `server/discover`) and the handshake revisions 2025-11-25, 2025-06-18, 2025-03-26 and 2024-11-05. Not implemented: pagination cursors on `tools/list` (all five tools come back in one page), `outputSchema`, `subscriptions/listen`
 - **Debug Logging**: Set `MCP_DEBUG_LOG=<file>` to log every message to a file (off by default; stdout stays clean JSON-RPC)
 
 ## 📦 Installation

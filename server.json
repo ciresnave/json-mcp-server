@@ -1,0 +1,23 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.ciresnave/json-mcp-server",
+  "title": "JSON MCP Server",
+  "description": "Read, write, query (JSONPath) and validate JSON files; streams large arrays. stdio server.",
+  "version": "0.3.8",
+  "repository": {
+    "url": "https://github.com/ciresnave/json-mcp-server",
+    "source": "github"
+  },
+  "websiteUrl": "https://github.com/ciresnave/json-mcp-server",
+  "packages": [
+    {
+      "registryType": "cargo",
+      "registryBaseUrl": "https://crates.io",
+      "identifier": "json-mcp-server",
+      "version": "0.3.8",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
