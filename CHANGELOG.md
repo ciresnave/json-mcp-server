@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (version allocated at gate)
+## 0.3.8 - 2026-11-26 (allocated by pm-assist; index readiness catch-up)
 
 ### Added
 - `server.json` for the official MCP Registry (`registryType: cargo`) and a visible `mcp-name:` line in the README (the registry checks it on crates.io; HTML comments are stripped there). Not published to the registry: that needs the maintainer's GitHub login.
