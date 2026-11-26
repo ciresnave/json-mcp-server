@@ -47,6 +47,14 @@ impl JsonOperations {
                 },
                 "required": ["file_path", "data"]
             }),
+            output_schema: Some(json!({
+                "type": "object",
+                "properties": {
+                    "file_path": { "type": "string", "description": "The file that was written" },
+                    "mode": { "type": "string", "enum": ["replace", "merge", "append"], "description": "The write mode that was applied" }
+                },
+                "required": ["file_path", "mode"]
+            })),
         }
     }
 
@@ -67,6 +75,18 @@ impl JsonOperations {
                 },
                 "required": ["file_path"]
             }),
+            output_schema: Some(json!({
+                "type": "object",
+                "properties": {
+                    "file_path": { "type": "string" },
+                    "valid": { "type": "boolean", "const": true, "description": "Always true: an invalid file is reported as a tool error instead" },
+                    "type": { "type": "string", "enum": ["object", "array", "string", "number", "boolean", "null"], "description": "Type of the top-level JSON value" },
+                    "size_bytes": { "type": "integer", "minimum": 0 },
+                    "properties": { "type": "integer", "minimum": 0, "description": "Number of properties; present only when type is object" },
+                    "elements": { "type": "integer", "minimum": 0, "description": "Number of elements; present only when type is array" }
+                },
+                "required": ["file_path", "valid", "type", "size_bytes"]
+            })),
         }
     }
 
@@ -168,10 +188,13 @@ impl JsonOperations {
         fs::write(file_path, content)
             .map_err(|e| anyhow::anyhow!("Failed to write file '{}': {}", file_path, e))?;
 
-        Ok(ToolResult::success(format!(
-            "Successfully wrote JSON to '{}' using {} mode",
-            file_path, mode
-        )))
+        Ok(ToolResult::success_structured(
+            format!(
+                "Successfully wrote JSON to '{}' using {} mode",
+                file_path, mode
+            ),
+            json!({ "file_path": file_path, "mode": mode }),
+        ))
     }
 
     async fn handle_validate(&self, args: &HashMap<String, Value>) -> anyhow::Result<ToolResult> {
@@ -205,19 +228,34 @@ impl JsonOperations {
                     Value::Null => "null",
                 };
 
-                Ok(ToolResult::success(format!(
-                    "JSON file '{}' is valid:\n- Type: {}\n- Size: {} bytes\n- Structure: {}",
-                    file_path,
-                    type_name,
-                    size,
-                    if json_value.is_object() {
-                        format!("{} properties", json_value.as_object().unwrap().len())
-                    } else if json_value.is_array() {
-                        format!("{} elements", json_value.as_array().unwrap().len())
-                    } else {
-                        "primitive value".to_string()
-                    }
-                )))
+                let mut structured = json!({
+                    "file_path": file_path,
+                    "valid": true,
+                    "type": type_name,
+                    "size_bytes": size,
+                });
+                match &json_value {
+                    Value::Object(o) => structured["properties"] = json!(o.len()),
+                    Value::Array(a) => structured["elements"] = json!(a.len()),
+                    _ => {}
+                }
+
+                Ok(ToolResult::success_structured(
+                    format!(
+                        "JSON file '{}' is valid:\n- Type: {}\n- Size: {} bytes\n- Structure: {}",
+                        file_path,
+                        type_name,
+                        size,
+                        if json_value.is_object() {
+                            format!("{} properties", json_value.as_object().unwrap().len())
+                        } else if json_value.is_array() {
+                            format!("{} elements", json_value.as_array().unwrap().len())
+                        } else {
+                            "primitive value".to_string()
+                        }
+                    ),
+                    structured,
+                ))
             }
             Err(e) => Ok(ToolResult::error(format!(
                 "JSON validation failed for '{}': {}",

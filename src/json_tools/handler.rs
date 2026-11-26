@@ -34,7 +34,8 @@ impl JsonToolsHandler {
                     }
                 },
                 "required": []
-            })
+            }),
+            output_schema: None,
         }
     }
 

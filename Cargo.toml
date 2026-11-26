@@ -27,6 +27,7 @@ chrono = { version = "0.4.45", features = ["serde"] }
 
 [dev-dependencies]
 tempfile = "3.27"
+jsonschema = { version = "0.63", default-features = false }
 
 [features]
 default = []

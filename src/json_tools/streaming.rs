@@ -45,7 +45,19 @@ impl JsonStreaming {
                     }
                 },
                 "required": ["file_path"]
-            })
+            }),
+            output_schema: Some(json!({
+                "type": "object",
+                "properties": {
+                    "file_path": { "type": "string" },
+                    "offset": { "type": "integer", "minimum": 0 },
+                    "limit": { "type": "integer", "minimum": 1 },
+                    "count": { "type": "integer", "minimum": 0, "description": "Number of results returned" },
+                    "stopped_at_limit": { "type": "boolean", "description": "True when reading stopped at limit and the rest of the file was not read or validated" },
+                    "results": { "description": "The results: an array, except that a whole-document read of a non-array value returns that value" }
+                },
+                "required": ["file_path", "offset", "limit", "count", "stopped_at_limit", "results"]
+            })),
         }
     }
 
@@ -73,18 +85,24 @@ impl JsonStreaming {
         } else {
             ""
         };
-        Ok(ToolResult::success(format!(
-            "Streamed {} results from '{}' (offset: {}, limit: {}):{}\n\n{}",
-            match &results {
-                Value::Array(arr) => arr.len(),
-                _ => 1,
-            },
-            file_path,
-            offset,
-            limit,
-            note,
-            output
-        )))
+        let count = match &results {
+            Value::Array(arr) => arr.len(),
+            _ => 1,
+        };
+        Ok(ToolResult::success_structured(
+            format!(
+                "Streamed {} results from '{}' (offset: {}, limit: {}):{}\n\n{}",
+                count, file_path, offset, limit, note, output
+            ),
+            json!({
+                "file_path": file_path,
+                "offset": offset,
+                "limit": limit,
+                "count": count,
+                "stopped_at_limit": stopped_at_limit,
+                "results": results,
+            }),
+        ))
     }
 
     fn stream_json_file(

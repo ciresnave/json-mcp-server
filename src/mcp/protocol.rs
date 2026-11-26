@@ -35,6 +35,12 @@ pub struct Tool {
     pub description: String,
     #[serde(rename = "inputSchema")]
     pub input_schema: Value,
+    #[serde(
+        rename = "outputSchema",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub output_schema: Option<Value>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -49,6 +55,12 @@ pub struct ToolResult {
     pub content: Vec<ToolContent>,
     #[serde(rename = "isError", skip_serializing_if = "Option::is_none")]
     pub is_error: Option<bool>,
+    #[serde(
+        rename = "structuredContent",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub structured_content: Option<Value>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -90,7 +102,16 @@ impl ToolResult {
                 text,
             }],
             is_error: None,
+            structured_content: None,
         }
+    }
+
+    /// A success result whose text is accompanied by `structuredContent` that conforms to the
+    /// tool's `outputSchema`.
+    pub fn success_structured(text: String, structured: Value) -> Self {
+        let mut result = Self::success(text);
+        result.structured_content = Some(structured);
+        result
     }
 
     pub fn error(text: String) -> Self {
@@ -100,6 +121,7 @@ impl ToolResult {
                 text,
             }],
             is_error: Some(true),
+            structured_content: None,
         }
     }
 }

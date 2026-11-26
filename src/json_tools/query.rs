@@ -37,7 +37,18 @@ impl JsonQuery {
                     }
                 },
                 "required": ["file_path", "query"]
-            })
+            }),
+            output_schema: Some(json!({
+                "type": "object",
+                "properties": {
+                    "file_path": { "type": "string" },
+                    "query": { "type": "string", "description": "The JSONPath expression that was run" },
+                    "format": { "type": "string", "enum": ["json", "text", "table"], "description": "Format used for the text content; results is always the raw values" },
+                    "count": { "type": "integer", "minimum": 0 },
+                    "results": { "type": "array", "description": "Every value the JSONPath matched" }
+                },
+                "required": ["file_path", "query", "format", "count", "results"]
+            })),
         }
     }
 
@@ -85,10 +96,20 @@ impl JsonQuery {
             _ => return Ok(ToolResult::error(format!("Unknown format: {}", format))),
         };
 
-        Ok(ToolResult::success(format!(
-            "Query results from '{}' using JSONPath '{}':\n\n{}",
-            file_path, query, output
-        )))
+        let count = results_value.as_array().map_or(0, Vec::len);
+        Ok(ToolResult::success_structured(
+            format!(
+                "Query results from '{}' using JSONPath '{}':\n\n{}",
+                file_path, query, output
+            ),
+            json!({
+                "file_path": file_path,
+                "query": query,
+                "format": format,
+                "count": count,
+                "results": results_value,
+            }),
+        ))
     }
 
     fn format_as_text(&self, value: &Value) -> String {

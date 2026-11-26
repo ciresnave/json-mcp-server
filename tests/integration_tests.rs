@@ -823,3 +823,117 @@ async fn test_json_read_line_delimited_scalars_and_arrays() {
         "{out}"
     );
 }
+
+/// Row 7 (`outputSchema`): every tool that advertises an `outputSchema` returns `structuredContent`
+/// that validates against it, checked through the JSON-RPC path with real tool output.
+#[tokio::test]
+async fn test_structured_content_conforms_to_output_schema() {
+    let server = registered_server().await;
+    let env = TestEnvironment::new();
+    let obj = env.create_json_file("obj.json", r#"{"a":1,"b":[1,2,3]}"#);
+    let arr = env.create_json_file("arr.json", r#"[{"id":1},{"id":2},{"id":3}]"#);
+    let out = env.temp_path.join("out.json");
+
+    let list = request_json(&server, r#"{"jsonrpc":"2.0","id":1,"method":"tools/list"}"#).await;
+    let schemas: HashMap<String, Value> = list["result"]["tools"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|t| !t["outputSchema"].is_null())
+        .map(|t| {
+            (
+                t["name"].as_str().unwrap().to_string(),
+                t["outputSchema"].clone(),
+            )
+        })
+        .collect();
+    let mut names: Vec<_> = schemas.keys().cloned().collect();
+    names.sort();
+    assert_eq!(
+        names,
+        ["json-query", "json-read", "json-validate", "json-write"]
+    );
+
+    let p = |f: &PathBuf| f.to_str().unwrap().to_string();
+    let calls: Vec<(&str, Value)> = vec![
+        (
+            "json-write",
+            json!({"file_path": p(&out), "data": {"k": "v"}, "mode": "merge"}),
+        ),
+        (
+            "json-write",
+            json!({"file_path": p(&out), "data": {"k": "v"}}),
+        ),
+        ("json-validate", json!({"file_path": p(&obj)})),
+        ("json-validate", json!({"file_path": p(&arr)})),
+        (
+            "json-query",
+            json!({"file_path": p(&arr), "query": "$[*].id"}),
+        ),
+        (
+            "json-query",
+            json!({"file_path": p(&arr), "query": "$[*].id", "format": "table"}),
+        ),
+        (
+            "json-query",
+            json!({"file_path": p(&arr), "query": "$.nope"}),
+        ),
+        ("json-read", json!({"file_path": p(&arr)})),
+        ("json-read", json!({"file_path": p(&arr), "limit": 1})),
+        ("json-read", json!({"file_path": p(&obj)})),
+        (
+            "json-read",
+            json!({"file_path": p(&obj), "query": "$.b[*]"}),
+        ),
+    ];
+    for (name, args) in calls {
+        let body = json!({"jsonrpc":"2.0","id":2,"method":"tools/call",
+            "params":{"name":name,"arguments":args}})
+        .to_string();
+        let resp = request_json(&server, &body).await;
+        let result = &resp["result"];
+        assert!(result["isError"].is_null(), "{name} {args}: {resp}");
+        let structured = &result["structuredContent"];
+        assert!(
+            structured.is_object(),
+            "{name} {args}: no structuredContent: {resp}"
+        );
+        let validator = jsonschema::validator_for(&schemas[name]).unwrap();
+        let errors: Vec<String> = validator
+            .iter_errors(structured)
+            .map(|e| e.to_string())
+            .collect();
+        assert!(errors.is_empty(), "{name} {args}: {errors:?}\n{structured}");
+    }
+
+    // Spot-check values, not just shape.
+    let body = json!({"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"json-read",
+        "arguments":{"file_path": p(&arr), "limit": 1}}})
+    .to_string();
+    let s = request_json(&server, &body).await["result"]["structuredContent"].clone();
+    assert_eq!(s["count"], 1);
+    assert_eq!(s["stopped_at_limit"], true);
+    assert_eq!(s["results"], json!([{"id": 1}]));
+}
+
+/// The schema must be able to fail: a result missing a required field is rejected.
+#[tokio::test]
+async fn test_output_schema_rejects_nonconforming_value() {
+    let server = registered_server().await;
+    let list = request_json(&server, r#"{"jsonrpc":"2.0","id":1,"method":"tools/list"}"#).await;
+    let schema = list["result"]["tools"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|t| t["name"] == "json-validate")
+        .unwrap()["outputSchema"]
+        .clone();
+    let validator = jsonschema::validator_for(&schema).unwrap();
+    assert!(!validator.is_valid(&json!({"file_path": "x"})));
+    assert!(
+        !validator.is_valid(&json!({"file_path":"x","valid":true,"type":"blob","size_bytes":1}))
+    );
+    assert!(validator.is_valid(
+        &json!({"file_path":"x","valid":true,"type":"array","size_bytes":1,"elements":0})
+    ));
+}

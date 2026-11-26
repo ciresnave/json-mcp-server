@@ -23,7 +23,7 @@ mcp-name: io.github.ciresnave/json-mcp-server
 - **Flexible Writing**: Three modes (replace, merge, append)
 - **LLM-Optimized**: Detailed error messages and usage examples for optimal LLM interaction
 - **Bounded Output**: Pagination (`limit`/`offset`) keeps each response small
-- **MCP**: tools-only server over stdio; speaks MCP revision 2026-07-28 (stateless, `server/discover`) and the handshake revisions 2025-11-25, 2025-06-18, 2025-03-26 and 2024-11-05. Not implemented: pagination cursors on `tools/list` (all five tools come back in one page), `outputSchema`, `subscriptions/listen`
+- **MCP**: tools-only server over stdio; json-read, json-write, json-query and json-validate declare an `outputSchema` and return `structuredContent` beside the text result (json-help is text only); speaks MCP revision 2026-07-28 (stateless, `server/discover`) and the handshake revisions 2025-11-25, 2025-06-18, 2025-03-26 and 2024-11-05. Not implemented: pagination cursors on `tools/list` (all five tools come back in one page), `subscriptions/listen`
 - **Debug Logging**: Set `MCP_DEBUG_LOG=<file>` to log every message to a file (off by default; stdout stays clean JSON-RPC)
 
 ## 📦 Installation
