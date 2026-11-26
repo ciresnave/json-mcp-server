@@ -90,10 +90,9 @@ jobs:
     - name: Build for testing
       shell: bash
       run: |
-        set -x
-        echo "DIAG PATH=$PATH"; type -a cargo rustc rustup || true; ls -la ~/.cargo/bin || true; rustup show || true
         # Ensure Rust is in PATH
-        source ~/.cargo/env 2>/dev/null || true
+        # macOS runners (Homebrew rustup) have no ~/.cargo/env; sourcing a missing file ends the step
+        if [ -f "$HOME/.cargo/env" ]; then . "$HOME/.cargo/env"; fi
         cargo build --locked --release --target ${{ matrix.target }}
     
     - name: Upload test binary
