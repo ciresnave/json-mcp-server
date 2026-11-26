@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased (version allocated at gate)
+
+### Added
+- `server.json` for the official MCP Registry (`registryType: cargo`) and a visible `mcp-name:` line in the README (the registry checks it on crates.io; HTML comments are stripped there). Not published to the registry: that needs the maintainer's GitHub login.
+- `SECURITY.md`.
+
+### Changed
+- Dependencies at their newest versions: anyhow 1.0.105, clap 4.6.10, jsonpath-rust 1.0.13 (lockfile refreshed throughout). Unused dependencies `uuid` and `tracing-subscriber` removed.
+- README: states the supported MCP revisions and the unimplemented parts (pagination cursors, `outputSchema`, subscriptions); drops the "full support" and "extremely large datasets" claims.
+- CI: the CodeRipper portfolio pin moves to 467fd259 (CodeRipper 0.48.1); the macOS jobs in `test-package-managers.yml` and `test-prebuilt.yml` no longer end with exit 1 at `source ~/.cargo/env` (the file does not exist on macOS runners).
+
 ## 0.3.7\n\n### Changed\n- CI only: the CodeRipper portfolio pin moves from 33bd929 to dc45e36 (portfolio rollout wave). Allocated by pm-assist.
 
 ## 0.3.6
