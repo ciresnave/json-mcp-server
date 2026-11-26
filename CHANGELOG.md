@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.9 - 2026-11-26 (allocated by pm-assist; CI and docs only)
+
+### Added
+
+- CI check that `server.json` (both version fields) equals `Cargo.toml`; README standalone `mcp-name` line; CHANGELOG 0.3.7 heading fix. No code change.
+
 ## 0.3.8 - 2026-11-26 (allocated by pm-assist; index readiness catch-up)
 
 ### Added
