@@ -292,6 +292,8 @@ jobs:
     - name: Test Cargo Installation
       shell: bash
       run: |
+        set -x
+        echo "DIAG PATH=$PATH"; type -a cargo rustc rustup || true; ls -la ~/.cargo/bin || true; cat ~/.cargo/env || true; rustup show || true
         # Comprehensive Rust installation and verification
         echo "🔧 Verifying Rust installation..."
         
