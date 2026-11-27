@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.9 - 2026-11-26 (allocated by pm-assist; CI and docs only)
+
+### Added
+
+- CI check that `server.json` (both version fields) equals `Cargo.toml`; README standalone `mcp-name` line; CHANGELOG 0.3.7 heading fix. No code change.
+
 ## 0.3.8 - 2026-11-26 (allocated by pm-assist; index readiness catch-up)
 
 ### Added
@@ -11,7 +17,10 @@
 - README: states the supported MCP revisions and the unimplemented parts (pagination cursors, `outputSchema`, subscriptions); drops the "full support" and "extremely large datasets" claims.
 - CI: the CodeRipper portfolio pin moves to 467fd259 (CodeRipper 0.48.1); the macOS jobs in `test-package-managers.yml` and `test-prebuilt.yml` no longer end with exit 1 at `source ~/.cargo/env` (the file does not exist on macOS runners). The `macos-14` matrix entries are dropped (GitHub answers "The configuration 'macos-14-arm64-us-default' is not supported" and cancels the job at once, which cancelled every scheduled run of Test Package Installations); `macos-15` stays.
 
-## 0.3.7\n\n### Changed\n- CI only: the CodeRipper portfolio pin moves from 33bd929 to dc45e36 (portfolio rollout wave). Allocated by pm-assist.
+## 0.3.7
+
+### Changed
+- CI only: the CodeRipper portfolio pin moves from 33bd929 to dc45e36 (portfolio rollout wave). Allocated by pm-assist.
 
 ## 0.3.6
 

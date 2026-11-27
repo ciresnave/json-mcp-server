@@ -2,7 +2,9 @@
 
 A high-performance Rust-based Model Context Protocol (MCP) server that provides comprehensive JSON file operations optimized for LLM interactions. This server enables LLMs to efficiently read, write, query, and manipulate JSON files with JSONPath querying and paged reads; a top-level array in a large file is streamed rather than loaded whole.
 
-- MCP Registry name: `mcp-name: io.github.ciresnave/json-mcp-server`
+MCP Registry name (checked on crates.io at publish):
+
+mcp-name: io.github.ciresnave/json-mcp-server
 
 ## 🚀 Features
 
